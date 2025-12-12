@@ -1,0 +1,16 @@
+.vscode
+*.log
+*.mail
+*.db
+sqlite3.exe
+__*
+go.cmd
+*.oaf
+build/
+dist/
+venv/
+*.py[codz]
+*$py.class
+ui_*.py
+*.zip
+*.cmd

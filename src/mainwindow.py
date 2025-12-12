@@ -28,6 +28,7 @@ from PySide6.QtSerialPort import QSerialPortInfo, QSerialPort
 from PySide6.QtWidgets import QMainWindow, QInputDialog, QMessageBox, QApplication, QStyleFactory, QLabel, QFrame, QStatusBar, QTableWidgetItem, QFileDialog, QMessageBox, QMenu
 
 import aboutdialog
+import bbsdialog
 from bbsparser import Jnos2Parser
 import formdialog
 import generalsettingsdialog
@@ -662,7 +663,7 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
                                         pass
                                     case "Msg":
                                         m = value
-                                        m = m.encode("windows-1252")
+                                        # m = m.encode("windows-1252")
                                         mbh.size = len(value)
                                     case "Hea": # sometimes this is spread over two lines, not sure why
                                         pass
@@ -757,21 +758,21 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         self.settings.addBBS("XSC_W6XSC-1","W6XSC-1","Santa Clara County ARES/RACES Packet System.  Used for testing, etc.  JNOS.")
         for bbs in self.settings.getBBSs():
             self.settings.setActiveBBS(bbs)
-            for dc in Jnos2Parser.get_default_commands.items():
+            for dc in Jnos2Parser.get_default_commands().items():
                 self.settings.setBBS(dc[0],dc[1])
         self.settings.setActiveBBS(self.settings.getBBSs()[0])
 
         self.settings.addInterface("XSC_Kantronics_KPC3-Plus","KPC3+ TNC for use with Santa Clara County's BBS System. Verify the COM port setting for your system.")
         self.settings.setActiveInterface(self.settings.getInterfaces()[0])
-        for p in KantronicsKPC3Plus.getDefaultPrompts():
+        for p in KantronicsKPC3Plus.get_default_prompts():
             self.settings.setInterface(p[0],p[1])
         self.settings.setInterface("AlwaysSendInitCommands",True)
         self.settings.setInterface("IncludeCommandPrefix",False)
-        for dc in KantronicsKPC3Plus.get_default_commands.items():
+        for dc in KantronicsKPC3Plus.get_default_commands().items():
             self.settings.setInterface(dc[0],dc[1])
         self.settings.setInterface("CommandPrefix","")
-        self.settings.setInterface("CommandsBefore",KantronicsKPC3Plus.getDefaultBeforeInitCommands())
-        self.settings.setInterface("CommandsAfter",KantronicsKPC3Plus.getDefaultAfterInitCommands())
+        self.settings.setInterface("CommandsBefore",KantronicsKPC3Plus.get_default_before_init_commands())
+        self.settings.setInterface("CommandsAfter",KantronicsKPC3Plus.get_default_after_init_commands())
         self.settings.setInterface("Baud","9600")
         self.settings.setInterface("Parity","None")
         self.settings.setInterface("DataBits","8")

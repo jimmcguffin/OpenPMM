@@ -12,7 +12,7 @@ class ReadMessageDialog(QMainWindow,Ui_ReadMessageDialogClass):
         self.pd = pd
         self.setupUi(self)
 
-    def prepopulate(self,h,m):
+    def prepopulate(self,h:MailBoxHeader,m:str):
         self.c_bbs.setText(h.bbs)
         self.c_from.setText(h.from_addr)
         self.c_to.setText(h.to_addr)

@@ -13,28 +13,28 @@ Road_Closure_v20250812.png
 
 [Fields]
 // see the ICS213 file for a description of these lines
-MsgNo,MessageNumber,str,Y,,P1,289,80,396,101
-1a.,Date,str,Y,DateValid,P1,90,150,+70,+26
-1b.,Time,str,Y,TimeValid,P1,243,150,+60,+26
-5.,Handling,rb,Y,,P1,373,152,735,178,IMMEDIATE,383,158,0,0,PRIORITY,517,158,0,0,ROUTINE,629,158,0,0
-7a.,ToIcsPosition,dd,Y,,P1,166,187,366,+25,Public Works Group,Construction & Eng. Branch,Operations
-8a.,FromIcsPosition,str,Y,,P1,484,187,735,+25
-7b.,ToLocation,str,Y,,P1,147,221,366,+25
-8b.,FromLocation,str,Y,,P1,484,221,735,+25
-7c.,ToName,str,,,P1,131,256,366,+25
-8c,FromName,str,,,P1,465,256,735,+25
-7d.,ToContactInfo,str,,,P1,169,290,366,+25
-8d.,FromContactInfo,str,,,P1,487,290,366,+25
-20.,Jurisdiction,dd,Y,,P1,171,348,735,+18,Campbell,Cupertino,Gilroy,Los Altos,Los Altos Hills,Los Gatos,Milpitas,Monte Sereno,Morgan Hill,Mountain View,Palo Alto,San Jose,Santa Clara (City),Saratoga,Sunnyvale,Santa Clara County,County unincorporated
-*21.,RoadIntersection,str,Y,,P1,171,373,735,+18
-22.,Location,mstr,Y,,P1,171,401,735,499
-23.,Details,mstr,Y,,P1,171,508,735,605
-24.,Status,rb,Y,,P1,171,611,578,629,Planned Closure,205,613,0,0,Closed,393,613,0,0,Reopened,535,613,0,0
-30d,ClosureStartDate,str,Y,DateValid,P1,171,673,+70,+20
-30t,ClosureStartTime,str,Y,TimeValid,P1,462,673,+60,+20
-31d,ClosureEndDate,str,Y,DateValid,P1,171,696,+70,+20
-32t,ClosureEndTime,str,Y,TimeValid,P1,462,696,+60,+20
-//OpName,OpName,str,,,P1,95,828,308,846
-//OpCall,OpCall,str,,,P1,374,828,477,846
-//OpDate,OpDate,str,,,P1,522,828,584,846
-//OpTime,OpTime,str,,,P1,666,828,743,846
+MsgNo,MessageNumber,str,Y,,P1,307,85,421,107
+1a.,Date,str,Y,DateValid,P1,96,159,+74,+28
+1b.,Time,str,Y,TimeValid,P1,258,159,+64,+28
+5.,Handling,rb,Y,,P1,396,162,781,189,IMMEDIATE,407,168,0,0,PRIORITY,549,168,0,0,ROUTINE,668,168,0,0
+7a.,ToIcsPosition,dd,Y,,P1,176,199,389,+27,Public Works Group,Construction & Eng. Branch,Operations
+8a.,FromIcsPosition,str,Y,,P1,514,199,781,+27
+7b.,ToLocation,str,Y,,P1,156,235,389,+27
+8b.,FromLocation,str,Y,,P1,514,235,781,+27
+7c.,ToName,str,,,P1,139,272,389,+27
+8c,FromName,str,,,P1,494,272,781,+27
+7d.,ToContactInfo,str,,,P1,180,308,389,+27
+8d.,FromContactInfo,str,,,P1,517,308,781,+27
+20.,Jurisdiction,dd,Y,,P1,182,370,781,+19,Campbell,Cupertino,Gilroy,Los Altos,Los Altos Hills,Los Gatos,Milpitas,Monte Sereno,Morgan Hill,Mountain View,Palo Alto,San Jose,Santa Clara (City),Saratoga,Sunnyvale,Santa Clara County,County unincorporated
+*21.,RoadIntersection,str,Y,,P1,182,396,781,+19
+22.,Location,mstr,Y,,P1,182,426,781,530
+23.,Details,mstr,Y,,P1,182,540,781,643
+24.,Status,rb,Y,,P1,182,649,683,668,Planned Closure,211,651,0,0,Closed,410,651,0,0,Reopened,561,651,0,0
+30d,ClosureStartDate,str,,DateValid,P1,182,713,+70,+20
+30t,ClosureStartTime,str,,TimeValid,P1,491,713,+60,+20
+31d,ClosureEndDate,str,,DateValid,P1,182,740,+70,+20
+32t,ClosureEndTime,str,,TimeValid,P1,491,740,+60,+20
+//OpName,OpName,str,,,P1,101,880,327,899
+//OpCall,OpCall,str,,,P1,397,880,507,899
+//OpDate,OpDate,str,,,P1,555,880,621,899
+//OpTime,OpTime,str,,,P1,708,880,789,899

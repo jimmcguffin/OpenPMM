@@ -42,7 +42,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Version 0.9</string>
+    <string>Version 0.5</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_3">
@@ -81,7 +81,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Later will be licensed unter GPLv3</string>
+    <string>Licensed under GPLv2</string>
    </property>
   </widget>
   <widget class="QPushButton" name="pushButton">

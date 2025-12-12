@@ -382,6 +382,7 @@ class Jnos2Parser(BbsParser):
         return {
 				"CommandBye":"B",
 				"CommandDelete":"K",
+				"CommandListMine":"LM",
 				"CommandListBulletin":"LB",
 				"CommandListFiltered":"L>",
 				"CommandListNts":"LT",

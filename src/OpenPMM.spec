@@ -5,7 +5,7 @@ a = Analysis(
     ['mainwindow.py'],
     pathex=[],
     binaries=[],
-    datas=[("forms.csv","."),("*.png","."),("*.desc",".")],
+    datas=[("forms.csv",".."),("*.png",".."),("*.desc","..")],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

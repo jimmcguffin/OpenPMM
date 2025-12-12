@@ -172,7 +172,7 @@ class KantronicsKPC3Plus(TncDevice):
         self.send(self.special_disconnect_value)
 
     @staticmethod
-    def getDefaultPrompts():
+    def get_default_prompts():
         return  [
 			("PromptCommand","cmd:"),
 			("PromptTimeout","*** retry count exceeded"),
@@ -189,7 +189,7 @@ class KantronicsKPC3Plus(TncDevice):
         return "<"+s+">" # this will never work but it will show in the log as a problem
 
     @staticmethod
-    def getDefaultCommands():
+    def get_default_commands():
          return {
 				"CommandMyCall":"my",
 				"CommandConnect":"connect",
@@ -199,7 +199,7 @@ class KantronicsKPC3Plus(TncDevice):
          }
     
     @staticmethod
-    def getDefaultBeforeInitCommands():
+    def get_default_before_init_commands():
         return [
             "INTFACE TERMINAL",
             "CD SOFTWARE",
@@ -224,7 +224,7 @@ class KantronicsKPC3Plus(TncDevice):
         ]
 
     @staticmethod
-    def getDefaultAfterInitCommands():
+    def get_default_after_init_commands():
         return [
             "SENDPAC $0D",
             "CR ON",
