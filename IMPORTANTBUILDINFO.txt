@@ -1,0 +1,8 @@
+All of the UI files are created using Qt's Designer tool.
+
+PySide6 requires an extra build step when using them. For each changed UI file, you need
+to run "pyside6-uic file.ui -o ui_file.py". This converts the XML of the .ui file into Python.
+
+There is a script in the "src" directory called "buildui.py" that will find all ui files 
+in the current directry and run pyside6-uic on them (if needed), so all you need to do is 
+type "python3 buildui.py". I manually run this after making any changes using Designer.
