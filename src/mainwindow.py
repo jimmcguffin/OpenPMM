@@ -492,7 +492,7 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             self.serialport.setRequestToSend(True)
         return True
     
-    def on_send_receive(self,send:bool,recv:bool,recv_bulletins:bool):
+    def on_send_receive(self,send:bool,recv:bool,recv_bulletins:bool,sendimmediate:[int]=None):
         # if a cycle was in progress, cancel it
         if self.tnc_parser:
             self.on_end_send_receive()
@@ -520,7 +520,14 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             srflags |= 2
         if recv_bulletins:
             srflags |= 4
-        self.tnc_parser.start_session(self.serialStream,self.mailbox,srflags)
+        self.tnc_parser.start_session(self.serialStream,self.mailbox,srflags,sendimmediate)
+
+    def on_send_immediately(self,row):
+        if row < 0 or row >= len(self.mailIndex): 
+            return
+        index = []
+        index.append(self.mailIndex[row])
+        self.on_send_receive(True,False,False,index)
 
     def on_end_send_receive(self):
         #self.serialport.close()
@@ -678,6 +685,10 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         if row < 0: return
         mailindex = self.mailIndex[row]
         m = QMenu(self)
+
+        if self.currentFolder == MailFlags.FOLDER_OUT_TRAY:
+            m.addAction("Send Immediately").triggered.connect(self.on_send_immediately)
+            m.addSeparator()
         m.addAction("Open").triggered.connect(lambda: self.on_read_message(row,0))
         mm = QMenu("Open Enhanced",self)
         mm.addAction("as Text").triggered.connect(lambda: self.on_read_message_text(row))  #.setEnabled(False)

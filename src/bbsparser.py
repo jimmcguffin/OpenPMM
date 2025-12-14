@@ -56,11 +56,13 @@ class BbsParser(QObject):
         self.serial_stream = None # later will be set to a SerialStream
         self.using_echo = using_echo
         self.srflags = 0
+        self.sendimmediate = []
 
-    def start_session(self,ss,mailbox,srflags:int):
+    def start_session(self,ss,mailbox,srflags:int,sendimmediate:[int]=None):
         self.serial_stream = ss
         self. mailbox = mailbox
         self.srflags = srflags
+        self.sendimmediate = sendimmediate
         self.serial_stream.line_end = b") >\r\n" # this matches what the original outpost uses, does now wotk if TNC is set for long prompts ("Z >\r\n" would be work)
         self.serial_stream.include_line_end_in_reply = True
         self.serial_stream.signalLineRead.disconnect()
@@ -94,25 +96,25 @@ class BbsParser(QObject):
         print()
 
     def add_step(self,step): # argument is a BbsSequenceStep, a BbsSequenceStepNoResonse, or a BbsSequenceSync
-        self.dump_sequence("as-before:")
+        # self.dump_sequence("as-before:")
         assert(isinstance(step,(BbsSequenceStep,BbsSequenceStepNoResonse,BbsSequenceSync)))
         self.bbs_sequence.append(step) # just add it to the end
-        self.dump_sequence("as-after:")
+        # self.dump_sequence("as-after:")
         # now check the front (which might be the thing we just pushed)
         self.check_sequence()
 
     # adds to the front of the list, this happens when new steps are needed in response to commands, eg when we get a "la", when then insert the read commands
     def push_step(self,step): # argument is a BbsSequenceStep, a BbsSequenceStepNoResonse, or a BbsSequenceSync
-        self.dump_sequence("ps-before:")
+        # self.dump_sequence("ps-before:")
         assert(isinstance(step,(BbsSequenceStep,BbsSequenceStepNoResonse,BbsSequenceSync)))
         self.bbs_sequence.insert(0,step)
-        self.dump_sequence("ps-after:")
+        # self.dump_sequence("ps-after:")
         # now check the front (which might be the thing we just pushed)
         self.check_sequence()
 
     # call this when items have been add or removed or when bbs_pending has been changed
     def check_sequence(self):
-        self.dump_sequence("cs-before:")
+        # self.dump_sequence("cs-before:")
         while self.bbs_sequence:
             step = self.bbs_sequence[0]
             if isinstance(step,BbsSequenceStep):
@@ -126,7 +128,7 @@ class BbsParser(QObject):
                     self.serial_stream.write(step.what_to_send)
             elif isinstance(step,BbsSequenceSync):
                 if self.bbs_pending:
-                    self.dump_sequence("cs-after:")
+                    # self.dump_sequence("cs-after:")
                     return # will get stuck here until all pendings are handled
                 del self.bbs_sequence[0:1]
                 if step.handler: # I think this will always be true
@@ -142,8 +144,8 @@ class Jnos2Parser(BbsParser):
         self.home_area = self.pd.getActiveCallSign(False).upper()
         self.current_area = ""
         self.areas_to_read = []
-    def start_session(self,ss,mailbox,srflags):
-        super().start_session(ss,mailbox,srflags)
+    def start_session(self,ss,mailbox,srflags,sendimmediate):
+        super().start_session(ss,mailbox,srflags,sendimmediate)
         self.add_step(BbsSequenceStep("",self.start_session2)) # there is a prompt/terminator that will arrive without being told
 
     def start_session2(self,r,_=None):
@@ -173,7 +175,10 @@ class Jnos2Parser(BbsParser):
 
     def send_outgoing(self,_=None):
         # if there are outgoing messages send them now
-        indexes = self.mailbox.get_header_indexes(MailFlags.FOLDER_OUT_TRAY)
+        if self.sendimmediate:
+            indexes = self.sendimmediate
+        else:
+            indexes = self.mailbox.get_header_indexes(MailFlags.FOLDER_OUT_TRAY)
         if indexes:
             self.signal_status_bar_message.emit("Sending out messages")
             for index in indexes:
