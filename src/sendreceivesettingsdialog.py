@@ -20,6 +20,7 @@ class SendReceiveSettingsDialog(QDialog,Ui_SendReceiveSettingsDialogClass):
         return super().accept()
     
     def load(self):
+        #page 1
         a = self.pd.getProfile("SRSettings/Automation/Automation")
         if a == "Manual": self.cManual.setChecked(True)
         elif a == "EveryN": self.cEveryN.setChecked(True)
@@ -33,10 +34,13 @@ class SendReceiveSettingsDialog(QDialog,Ui_SendReceiveSettingsDialogClass):
         elif sr == "SendOnly": self.cSendOnly.setChecked(True)
         elif sr == "ReceiveOnly": self.cReceiveOnly.setChecked(True)
         else: self.cSendReceive.setChecked(True)
+        #page 2
+        self.cLeaveOnServer.setChecked(self.pd.getProfileBool("SRSettings/LeaveOnServer"))
         self.need_save = True
-       
+
     def save(self):
         if not self.need_save: return
+        # page 1
         if self.cManual.isChecked():
             self.pd.setProfile("SRSettings/Automation/Automation","Manual")
         elif self.cEveryN.isChecked():
@@ -56,6 +60,8 @@ class SendReceiveSettingsDialog(QDialog,Ui_SendReceiveSettingsDialogClass):
             self.pd.setProfile("SRSettings/Button","ReceiveOnly")
         else:
             self.pd.setProfile("SRSettings/Button","SendReceive")
+        #page 2
+        self.pd.setProfile("SRSettings/LeaveOnServer",self.cLeaveOnServer.isChecked())
         self.need_save = False
     
 #  def onXChanged(self,str):

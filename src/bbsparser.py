@@ -265,14 +265,15 @@ class Jnos2Parser(BbsParser):
     def kill_read_messages(self,_=None):
         # only kill read messages on own area
         callsign = self.pd.getActiveCallSign(False).upper()
-        if self.current_area == callsign:
-            if self.messages_to_be_killed:
-                k = self.get_command("CommandDelete")
-                for m in self.messages_to_be_killed:
-                    k += " "
-                    k += str(m)
-                k += "\r"
-                self.push_step(BbsSequenceStep(k))
+        if not self.pd.getProfileBool("SRSettings/LeaveOnServer"):
+            if self.current_area == callsign:
+                if self.messages_to_be_killed:
+                    k = self.get_command("CommandDelete")
+                    for m in self.messages_to_be_killed:
+                        k += " "
+                        k += str(m)
+                    k += "\r"
+                    self.push_step(BbsSequenceStep(k))
         self.messages_to_be_killed.clear()
 
     def send_confirmations(self,_=None):

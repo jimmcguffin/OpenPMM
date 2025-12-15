@@ -291,22 +291,31 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
                 self.mailSortBackwards = False # not sure if this is desired, maybe keep array of these
         print(f"sort {self.mailSortIndex} {self.mailSortBackwards}")
         self.update_mail_list()
+
     def update_mail_list(self):
         tmpindex = self.mailSortIndex+2 # now 2 to 10
         #if tmpindex == 9: tmpindex = 10
-        if 2 <= tmpindex <= 10:
+        # the sent foldor shows target ids instead of lcoal
+        if self.currentFolder == MailFlags.FOLDER_SENT:
+            keyname = ["urgent","type_str","from_addr","to_addr","bbs","target_id","subject","date_sent","size"][tmpindex-2]
+            self.cMailList.horizontalHeaderItem(5).setText("Target ID")
+        else:
             keyname = ["urgent","type_str","from_addr","to_addr","bbs","local_id","subject","date_sent","size"][tmpindex-2]
+            self.cMailList.horizontalHeaderItem(5).setText("Local ID")
+
+        if 2 <= tmpindex <= 10:
             headers = sorted(self.mailbox.get_headers(self.currentFolder),key=attrgetter(keyname), reverse=self.mailSortBackwards)
         else:
             headers = self.mailbox.get_headers(self.currentFolder)
+
         self.mailIndex.clear()
         self.cMailList.clearContents()
         self.cMailList.setColumnWidth(0,40)
         self.cMailList.setColumnWidth(1,40)
-        self.cMailList.setColumnWidth(2,200)
-        self.cMailList.setColumnWidth(3,200)
+        self.cMailList.setColumnWidth(2,190)
+        self.cMailList.setColumnWidth(3,190)
         self.cMailList.setColumnWidth(4,60)
-        self.cMailList.setColumnWidth(5,60)
+        self.cMailList.setColumnWidth(5,80)
         self.cMailList.setColumnWidth(6,240)
         self.cMailList.setColumnWidth(7,140)
         self.cMailList.setColumnWidth(8,40)
@@ -323,7 +332,10 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             self.cMailList.setItem(i,2,QTableWidgetItem(headers[i].from_addr))
             self.cMailList.setItem(i,3,QTableWidgetItem(headers[i].to_addr))
             self.cMailList.setItem(i,4,QTableWidgetItem(headers[i].bbs))
-            self.cMailList.setItem(i,5,QTableWidgetItem(headers[i].local_id))
+            if self.currentFolder == MailFlags.FOLDER_SENT:
+                self.cMailList.setItem(i,5,QTableWidgetItem(headers[i].target_id))
+            else:
+                self.cMailList.setItem(i,5,QTableWidgetItem(headers[i].local_id))
             self.cMailList.setItem(i,6,QTableWidgetItem(headers[i].subject))
             self.cMailList.setItem(i,7,QTableWidgetItem(MailBoxHeader.to_outpost_date(headers[i].date_sent)))
             # this version does not show the date received
@@ -536,8 +548,48 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         self.serialStream = None
         self.tnc_parser = None
 
-    def on_new_incoming_message(self,mbh:MailBoxHeader,m):
+    def find_tags(m:str):
+        """ parses all tags in first line of message, retuns a dictionary """
+        r = {}
+        line = m.split("\n",1)[0].strip() + "!" # the ! at the end simplifies parsing
+        # the pattern looks like "!NAME!value"*
+        while line and line[0] == "!":
+            i = line.find("!",1) # find the ending "!"
+            if i < 0:
+                return r
+            j = line.find("!",i+1) # find the ending "!"
+            if j < 0: # this should never happen since we added one above
+                return r
+            r[line[1:i]] = line[i+1:j]
+            line = line[j:]
+                  
+    def match_delivery_receipts(self,mbh:MailBoxHeader,m:str,actual_headers:str=None): # todo: this will need improving to support multiple recipients
+        # if this is a delivery receipt, do stuff
+        d,_,s = mbh.subject.partition(": ")
+        if d == "DELIVERED":
+            # when importing messages from OAF files, the tag line of the message is in the headers
+            if actual_headers:
+                lines = actual_headers.splitlines()
+                # find the empty line
+                in_header = True
+                for line in lines:
+                    if not line:
+                        in_header = False
+                    elif not in_header:
+                        m = line
+                        break
+            tags = MainWindow.find_tags(m)
+            if tags:
+                lmi = tags.get("LMI")
+                if lmi:
+                    return (s,lmi) # self.mailbox.add_target_id(s,lmi)
+        return (None,None)
+
+    def on_new_incoming_message(self,mbh:MailBoxHeader,m:str):
         self.mailbox.add_mail(mbh,m,MailFlags.FOLDER_IN_TRAY)
+        s,lmi = self.match_delivery_receipts(mbh,m)
+        if s and lmi:
+            self.mailbox.add_target_id(s,lmi)
         # log this
         try:
             with open("activity.log","ab") as file:
@@ -581,7 +633,7 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
                 # line endings gets encoded as ~CR~
                 # the strange part is that "~" does not get escaped or encoded in any way, they just pass through,
                 # so users could cause confusion by typing in ~CR~
-                # some helper funcions:
+                # some helper functions:
                 def convert_folder(f:int): # outpost numbers them differently and only has one folder per message
                     if f == 1: return MailFlags.FOLDER_IN_TRAY.value
                     if f == 2: return MailFlags.FOLDER_OUT_TRAY.value
@@ -595,10 +647,16 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
                     if f == 14: return MailFlags.FOLDER_4.value
                     if f == 15: return MailFlags.FOLDER_5.value
                     return MailFlags.FOLDER_IN_TRAY.value # as a default
+                # another problem - the OAF file exporter writes out the messages in folder order, not chronologically
+                # this means that all the delivery receipts come before the send messages, which thwarts maching them up
+                # so I will save the info and do it at the end
+                drs = []
                 with open(fname,"rt",encoding="windows-1252") as file:
                     inmessage = False
+                    in_two_line_header = False
                     mbh = MailBoxHeader()
                     m = ""
+                    headers = "" # at this point only needed for resolving delivery receipts
                     for line in file.readlines():
                         line = line.strip()
                         if not line:
@@ -606,12 +664,31 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
                         if line == "[NEW MESSAGE]":
                             mbh = MailBoxHeader()
                             m = ""
+                            headers = ""
                             inmessage = True # could detect if we are already in a message and flag error
+                            in_two_line_header = False
                         elif line == "[END]":
                             if m and mbh.flags:
+                                # temp - discard test messages
+                                if mbh.to_addr.upper().startswith("KW6W") and mbh.from_addr.upper().startswith("KW6W"):
+                                    continue
                                 self.mailbox.add_mail(mbh,m,MailFlags.FOLDER_NONE) # mbh.flags has already been sent
+                                # "Hea" (headers) are the actual headers
+                                # it also includes the first line of the message, which is needed here
+                                tmp = self.match_delivery_receipts(mbh,m,headers)
+                                if tmp[0]:
+                                    drs.append(tmp)
                             inmessage = False # could detect if we are not already in a message and flag error
+                            inheader = False
                         else:
+                            if in_two_line_header:
+                                value = line
+                                value = value.lstrip()
+                                value = value.replace("~-_~","=")
+                                value = value.replace("~CR~","\n")
+                                headers += value
+                                in_two_line_header = False
+                                continue
                             if inmessage:
                                 name,_,value = line.partition("=")
                                 name = name.rstrip()
@@ -645,7 +722,7 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
                                         if value == "6":
                                             mbh.set_type(1) # might conflict with "Typ="
                                     case "Ori":
-                                        # this is just a guess
+                                        # this is just a guess, seems to be "2" for incoming
                                         if value == "1":
                                             mbh.flags |= MailFlags.IS_OUTGOING.value
                                         pass
@@ -673,7 +750,13 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
                                         # m = m.encode("windows-1252")
                                         mbh.size = len(value)
                                     case "Hea": # sometimes this is spread over two lines, not sure why
-                                        pass
+                                        if not value:
+                                            in_two_line_header = True
+                                        else:
+                                            headers = value
+                                            in_two_line_header = False
+                for dr in drs:
+                    self.mailbox.add_target_id(dr[0],dr[1])
                 self.update_mail_list()
             except FileNotFoundError:
                 pass

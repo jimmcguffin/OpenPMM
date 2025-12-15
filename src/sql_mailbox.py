@@ -5,9 +5,6 @@ import sqlite3
 from enum import Enum
 from fnmatch import fnmatch
 
-# headers (items in same order as display)
-# */flagbits/From/To/BBS/LocalId/Subject/DateSent/DateReceived/Size
-
 # the flags are held in a 24 bit number
 # the low 11 bits are the folders that the mail is currently in
 # 1 bit unused (maybe a 12th folder)
@@ -51,13 +48,14 @@ class FieldsToSearch(Enum):
     ALL_FOLDERS_EX = 1<<7
 
 class MailBoxHeader:
-    def __init__(self,id=0,flags=0,from_addr="",to_addr="",bbs="",local_id="",subject="",date_sent="",date_received="",size=0,_=None): # last item is to handle SELECT * results
+    def __init__(self,id:int=0,flags:int=0,from_addr:str="",to_addr:str="",bbs:str="",local_id:str="",target_id:str="",subject:str="",date_sent:str="",date_received:str="",size:int=0,_=None): # last item is to handle SELECT * results
         self.index = id # shoule be called id, but older version used index
         self.flags = flags # bit encoded, includes New/unread and folder bit mask
         self.from_addr = from_addr
         self.to_addr = to_addr
         self.bbs = bbs
         self.local_id = local_id
+        self.target_id = target_id # only applies to messages we originate
         self.subject = subject
         self.date_sent = date_sent # in ISO-8601 format
         self.date_received = date_received # in ISO-8601 format
@@ -202,6 +200,7 @@ class MailBox:
             to_addr NVARCHAR(64),
             bbs NVARCHAR(64),
             local_id NVARCHAR(64),
+            target_id NVARCHAR(64),
             subject NVARCHAR(256),
             date_sent CHAR(19),
             date_received CHAR(19),
@@ -209,13 +208,15 @@ class MailBox:
             message BLOB NOT NULL
             )""")
     
-
     def needs_cleaning(self) -> bool:
         return True
 
     def clean(self): # erases  items in Folder "X", should run at start or end (or both)
-        keepers = MailFlags.FOLDER_BITS.value - MailFlags.FOLDER_DELETED.value - MailFlags.FOLDER_SEARCH_RESULTS.value # if a message has any of these bit set, keep it
-        self.cursor.execute("DELETE FROM messages WHERE NOT flags & ?",(keepers,))
+        # this version erases anything in the deleted folder and also not in any folder (ie, marked permanent deletion)
+        # keepers = MailFlags.FOLDER_BITS.value - MailFlags.FOLDER_DELETED.value - MailFlags.FOLDER_SEARCH_RESULTS.value # if a message has any of these bit set, keep it
+        # this version only deletes items not in any folder (ie, marked permanent deletion)
+        keepers = MailFlags.FOLDER_BITS.value - MailFlags.FOLDER_SEARCH_RESULTS.value # if a message has any of these bit set, keep it
+        # self.cursor.execute("DELETE FROM messages WHERE NOT flags & ?",(keepers,))
         self.connection.commit()
 
     def load(self):
@@ -233,9 +234,9 @@ class MailBox:
                 return True
         mbh.flags |= folder.value
         mbh.size = len(message)
-        self.cursor.execute("INSERT INTO messages (flags,from_addr,to_addr,bbs,local_id,subject,date_sent,date_received,size,message)"
-            "VALUES (?,?,?,?,?,?,?,?,?,?)",
-            (mbh.flags,mbh.from_addr,mbh.to_addr,mbh.bbs,mbh.local_id,mbh.subject,mbh.date_sent,mbh.date_received,len(message),message))
+        self.cursor.execute("INSERT INTO messages (flags,from_addr,to_addr,bbs,local_id,target_id,subject,date_sent,date_received,size,message)"
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            (mbh.flags,mbh.from_addr,mbh.to_addr,mbh.bbs,mbh.local_id,mbh.target_id,mbh.subject,mbh.date_sent,mbh.date_received,len(message),message))
         self.connection.commit()
 
     def copy_mail(self,indexlist,tofolder:MailFlags):
@@ -294,6 +295,19 @@ class MailBox:
         for row in rows:
             r.append(row[0])
         return r
+
+    def add_target_id(self,subject:str,target_id:str):
+        r = []
+        self.cursor.execute("SELECT * FROM messages WHERE subject == ?",(subject,))
+        rows = self.cursor.fetchall()
+        #  there should obly be one, not sure what to do if more then one
+        for row in rows:
+            mbh = MailBoxHeader(*row)
+            # already screened out the subject with SELECT, now check remaining fields
+            if not mbh.target_id:
+                mbh.target_id = target_id
+                self.cursor.execute("UPDATE messages SET target_id = ? WHERE id = ?;",(target_id,mbh.index,))
+                self.connection.commit()
 
     def search(self,searchstr:str,fields_to_search:FieldsToSearch,folders:MailFlags):
         # first step is to clear out the search results folder

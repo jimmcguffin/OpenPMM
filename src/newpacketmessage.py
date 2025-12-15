@@ -70,6 +70,7 @@ class NewPacketMessage(QMainWindow,Ui_NewPacketMessageClass):
         mbh.to_addr = self.cTo.text()
         mbh.bbs = self.cBBS.text()
         #mbh.local_id = ""
+        #mbh.target_id = ""
         mbh.subject = self.cSubject.text()
         mbh.date_sent = MailBoxHeader.normalized_date()
         #mbh.date_received = "" # in ISO-8601 format
