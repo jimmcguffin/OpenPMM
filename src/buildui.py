@@ -7,9 +7,9 @@ def main():
 
     if not args:
         # build all of them
-        flist = glob.glob("*.ui")
+        flist = glob.glob("../ui/*.ui")
         for f in flist:
-            o = "ui_"+f.replace(".ui",".py")
+            o = "ui_"+f[6:].replace(".ui",".py") # the "6" skips over the "../ui/"
             # compare times
             go = False
             ci = os.path.getmtime(f)
