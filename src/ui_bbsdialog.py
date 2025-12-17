@@ -215,8 +215,6 @@ class Ui_BbsDialogClass(object):
 
         self.tabWidget.setCurrentIndex(0)
 
-
-        QMetaObject.connectSlotsByName(BbsDialogClass)
     # setupUi
 
     def retranslateUi(self, BbsDialogClass):

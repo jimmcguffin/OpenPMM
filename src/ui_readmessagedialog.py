@@ -230,8 +230,6 @@ class Ui_ReadMessageDialogClass(object):
         self.menuWindows.addAction(self.actionReset_Form_to_Normal)
 
         self.retranslateUi(ReadMessageDialogClass)
-
-        QMetaObject.connectSlotsByName(ReadMessageDialogClass)
     # setupUi
 
     def retranslateUi(self, ReadMessageDialogClass):

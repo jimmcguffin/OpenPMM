@@ -69,6 +69,13 @@ class MailBoxHeader:
         return False
 
     @staticmethod
+    def is_date_sent_within(date1:str,date2:str,other_date:str,seconds:int=0) -> bool:
+        dt1 = datetime.datetime.fromisoformat(date1)
+        dt2 = datetime.datetime.fromisoformat(date2)
+        diff = dt1-dt2
+        return abs(diff) <= seconds
+
+    @staticmethod
     def to_outpost_date(s):
 		# the display date used by Outpost has a different format
         if not s: return ""
@@ -99,10 +106,6 @@ class MailBoxHeader:
         if isinstance(d,float):
             if not d:
                 return ""
-            # fdays,days = math.modf(d)
-            # fhours,hours = math.modf(fdays*24)
-            # fmins,mins = math.modf(fhours*60)
-            # _,secs = math.modf(fmins*60)
             d0 = datetime.datetime(1900,1,1)
             d1 = datetime.timedelta(d-2) # why -2? No explanation, I had to to make the times match
             return "{:%Y-%m-%dT%H:%M:%S}".format(d0+d1)
@@ -258,6 +261,21 @@ class MailBox:
                 self.cursor.execute("UPDATE messages SET flags = ? WHERE id = ?;",(flags,index,))
                 self.connection.commit()
 
+    # this makes duplicates, one for each "to_addr", tofolder will usually be "SENT_MESSAGES"
+    # should only call this if you know there are multiple recipients, otherwise is inefficient
+    def fork_mail(self,index:int,tofolder:MailFlags):
+        mbh,m = self.get_message(index)
+        if not m:
+            return
+        # remove original message
+        self.move_mail([index],MailFlags.FOLDER_BITS,MailFlags.FOLDER_NONE) # equivalent to a hard delete
+        rlist = mbh.to_addr.split(",")
+        mbh.flags &= ~MailFlags.FOLDER_BITS.value
+        mbh.flags |= tofolder.value
+        for r in rlist:
+            mbh.to_addr = r.strip()
+            self.add_mail(mbh,m,tofolder)
+
     # returns a MailBoxHeader and a string containing the message
     def get_message(self,n) -> tuple[MailBoxHeader,str]:
         self.cursor.execute("SELECT * FROM messages WHERE id == ?",(n,))
@@ -296,15 +314,19 @@ class MailBox:
             r.append(row[0])
         return r
 
-    def add_target_id(self,subject:str,target_id:str):
+    def add_target_id(self,subject:str,faddr:str,target_id:str):
         r = []
+        faddr,_,_ = faddr.partition("@")
+        faddr = faddr.upper()
         self.cursor.execute("SELECT * FROM messages WHERE subject == ?",(subject,))
         rows = self.cursor.fetchall()
-        #  there should obly be one, not sure what to do if more then one
         for row in rows:
             mbh = MailBoxHeader(*row)
             # already screened out the subject with SELECT, now check remaining fields
-            if not mbh.target_id:
+            # for now, the from address must sorta match (up to the "@")
+            taddr,_,_ = mbh.to_addr.partition("@")
+            taddr = taddr.upper()
+            if faddr == taddr and not mbh.target_id:
                 mbh.target_id = target_id
                 self.cursor.execute("UPDATE messages SET target_id = ? WHERE id = ?;",(target_id,mbh.index,))
                 self.connection.commit()

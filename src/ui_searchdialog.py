@@ -59,8 +59,6 @@ class Ui_Dialog(object):
         self.c_current_folder.setGeometry(QRect(200, 105, 200, 20))
 
         self.retranslateUi(Dialog)
-
-        QMetaObject.connectSlotsByName(Dialog)
     # setupUi
 
     def retranslateUi(self, Dialog):

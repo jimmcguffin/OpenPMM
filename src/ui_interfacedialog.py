@@ -269,8 +269,6 @@ class Ui_InterfaceDialogClass(object):
 
         self.tabWidget.setCurrentIndex(0)
 
-
-        QMetaObject.connectSlotsByName(InterfaceDialogClass)
     # setupUi
 
     def retranslateUi(self, InterfaceDialogClass):

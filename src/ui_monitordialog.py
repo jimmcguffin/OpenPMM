@@ -31,8 +31,6 @@ class Ui_MonitorDialogClass(object):
         self.cText.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
 
         self.retranslateUi(MonitorDialogClass)
-
-        QMetaObject.connectSlotsByName(MonitorDialogClass)
     # setupUi
 
     def retranslateUi(self, MonitorDialogClass):

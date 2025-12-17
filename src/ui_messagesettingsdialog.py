@@ -148,8 +148,6 @@ class Ui_MessageSettingsDialogClass(object):
 
         self.tabWidget.setCurrentIndex(0)
 
-
-        QMetaObject.connectSlotsByName(MessageSettingsDialogClass)
     # setupUi
 
     def retranslateUi(self, MessageSettingsDialogClass):

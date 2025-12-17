@@ -43,8 +43,6 @@ class Ui_FormDialogClass(object):
         FormDialogClass.setCentralWidget(self.centralWidget)
 
         self.retranslateUi(FormDialogClass)
-
-        QMetaObject.connectSlotsByName(FormDialogClass)
     # setupUi
 
     def retranslateUi(self, FormDialogClass):

@@ -48,8 +48,6 @@ class Ui_LogSettingsDialogClass(object):
         self.retranslateUi(LogSettingsDialogClass)
         self.cOK.clicked.connect(LogSettingsDialogClass.accept)
         self.cCancel.clicked.connect(LogSettingsDialogClass.reject)
-
-        QMetaObject.connectSlotsByName(LogSettingsDialogClass)
     # setupUi
 
     def retranslateUi(self, LogSettingsDialogClass):

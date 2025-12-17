@@ -185,7 +185,13 @@ class Jnos2Parser(BbsParser):
                 mbh,m = self.mailbox.get_message(index)
                 m2 = m.replace("\r\n","\r").replace("\n","\r") # make sure there are no linefeeds
                 if not m2.endswith('\r'): m2 += '\r'
-                self.push_step(BbsSequenceStep(f"{self.get_command("CommandSend")} {mbh.to_addr}\r{mbh.subject}\r{m2}/EX\r",self.handle_sent,index))
+                rlist = mbh.to_addr.split(",")
+                if len(rlist) >= 2:
+                    r1 = rlist[0].strip()
+                    r2 = ",".join(rlist[1:])
+                    self.push_step(BbsSequenceStep(f"{self.get_command("CommandSendMultiple")} {r1}\r{r2}\r{mbh.subject}\r{m2}/EX\r",self.handle_sent,index))
+                else:
+                    self.push_step(BbsSequenceStep(f"{self.get_command("CommandSend")} {mbh.to_addr}\r{mbh.subject}\r{m2}/EX\r",self.handle_sent,index))
 
     # def send_lists(self,_=None):
     #     if self.srflags & 2:
@@ -394,6 +400,7 @@ class Jnos2Parser(BbsParser):
 				"CommandListNts":"LT",
 				"CommandRead":"R",
 				"CommandSend":"SP",
+				"CommandSendMultiple":"SC",
 				"CommandSendBulletin":"SB",
 				"CommandSendNts":"ST",
          }

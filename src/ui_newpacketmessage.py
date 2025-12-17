@@ -225,8 +225,6 @@ class Ui_NewPacketMessageClass(object):
         self.menuWindow.addAction(self.actionReset_Form_to_Normal)
 
         self.retranslateUi(NewPacketMessageClass)
-
-        QMetaObject.connectSlotsByName(NewPacketMessageClass)
     # setupUi
 
     def retranslateUi(self, NewPacketMessageClass):

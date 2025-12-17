@@ -427,8 +427,6 @@ class Ui_MainWindowClass(object):
         self.menuHelp.addAction(self.actionAbout_OpenPMM)
 
         self.retranslateUi(MainWindowClass)
-
-        QMetaObject.connectSlotsByName(MainWindowClass)
     # setupUi
 
     def retranslateUi(self, MainWindowClass):

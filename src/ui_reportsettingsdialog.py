@@ -165,8 +165,6 @@ class Ui_ReportSettingsDialogClass(object):
 
         self.tabWidget.setCurrentIndex(2)
 
-
-        QMetaObject.connectSlotsByName(ReportSettingsDialogClass)
     # setupUi
 
     def retranslateUi(self, ReportSettingsDialogClass):

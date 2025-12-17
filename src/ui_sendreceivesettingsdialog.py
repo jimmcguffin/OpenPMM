@@ -111,8 +111,6 @@ class Ui_SendReceiveSettingsDialogClass(object):
 
         self.tabWidget.setCurrentIndex(1)
 
-
-        QMetaObject.connectSlotsByName(SendReceiveSettingsDialogClass)
     # setupUi
 
     def retranslateUi(self, SendReceiveSettingsDialogClass):

@@ -563,7 +563,7 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             r[line[1:i]] = line[i+1:j]
             line = line[j:]
                   
-    def match_delivery_receipts(self,mbh:MailBoxHeader,m:str,actual_headers:str=None): # todo: this will need improving to support multiple recipients
+    def match_delivery_receipts(self,mbh:MailBoxHeader,m:str,actual_headers:str=None):
         # if this is a delivery receipt, do stuff
         d,_,s = mbh.subject.partition(": ")
         if d == "DELIVERED":
@@ -582,14 +582,14 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             if tags:
                 lmi = tags.get("LMI")
                 if lmi:
-                    return (s,lmi) # self.mailbox.add_target_id(s,lmi)
-        return (None,None)
+                    return (s,mbh.from_addr,lmi)
+        return (None,None,None)
 
     def on_new_incoming_message(self,mbh:MailBoxHeader,m:str):
         self.mailbox.add_mail(mbh,m,MailFlags.FOLDER_IN_TRAY)
-        s,lmi = self.match_delivery_receipts(mbh,m)
+        s,faddr,lmi = self.match_delivery_receipts(mbh,m)
         if s and lmi:
-            self.mailbox.add_target_id(s,lmi)
+            self.mailbox.add_target_id(s,faddr,lmi)
         # log this
         try:
             with open("activity.log","ab") as file:
@@ -601,7 +601,13 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
 
     def on_message_sent(self,index:int):
         indexlist = [index]
-        self.mailbox.move_mail(indexlist,MailFlags.FOLDER_OUT_TRAY,MailFlags.FOLDER_SENT)
+        # if there are multiple recipients, fork this into multiple messages to allow tracking of separate acknowledgements
+        mbh,m = self.mailbox.get_message(index)
+        rlist = mbh.to_addr.split(",")
+        if len(rlist) < 2:
+            self.mailbox.move_mail(indexlist,MailFlags.FOLDER_OUT_TRAY,MailFlags.FOLDER_SENT)
+        else:            # have to do this the hard way
+            self.mailbox.fork_mail(index,MailFlags.FOLDER_SENT)
         self.update_mail_list()
 
     def on_delete_messages(self):
@@ -756,7 +762,7 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
                                             headers = value
                                             in_two_line_header = False
                 for dr in drs:
-                    self.mailbox.add_target_id(dr[0],dr[1])
+                    self.mailbox.add_target_id(dr[0],dr[1],dr[2])
                 self.update_mail_list()
             except FileNotFoundError:
                 pass

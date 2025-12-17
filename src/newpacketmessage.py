@@ -68,6 +68,8 @@ class NewPacketMessage(QMainWindow,Ui_NewPacketMessageClass):
         elif self.cMessageTypeNts.isChecked(): mbh.set_type(2)
         mbh.from_addr = self.cFrom.text()
         mbh.to_addr = self.cTo.text()
+        # if they used some non-standard separator, fix that
+        mbh.to_addr = mbh.to_addr.replace(";",",")
         mbh.bbs = self.cBBS.text()
         #mbh.local_id = ""
         #mbh.target_id = ""

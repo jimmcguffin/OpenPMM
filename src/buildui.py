@@ -7,7 +7,7 @@ def main():
 
     if not args:
         # build all of them
-        flist = glob.glob("../ui/*.ui")
+        flist = glob.glob("..\\ui\\*.ui")
         for f in flist:
             o = "ui_"+f[6:].replace(".ui",".py") # the "6" skips over the "../ui/"
             # compare times
@@ -23,13 +23,13 @@ def main():
             except FileNotFoundError:
                 go = True
             if go:
-                s = f"pyside6-uic {f} -o {o}"
+                s = f"pyside6-uic {f} -a -o {o}"
                 print(s)
                 os.system(s)
     else:
         for f in args:
             o = "ui_"+f.replace(".ui",".py")
-            s = f"pyside6-uic {f} -o {o}"
+            s = f"pyside6-uic {f} -a -o {o}"
             os.system(s)
             #print(s)
 
