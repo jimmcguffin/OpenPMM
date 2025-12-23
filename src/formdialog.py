@@ -7,7 +7,6 @@ from PySide6.QtWidgets import QMainWindow, QLineEdit, QWidget, QPlainTextEdit, Q
 from PySide6.QtGui import QPixmap, QPalette, QColor, QFont, QPainter
 
 from globalsignals import global_signals
-from persistentdata import PersistentData
 
 from ui_formdialog import Ui_FormDialogClass
 
@@ -16,21 +15,15 @@ class PageController:
         self.pages = pages
 
     def get_coordinates(self,page:int,f:list,dw=0,dh=0):
-        x0 = int(f[0])
-        y0 = self.page_to_screen(page,int(f[1]))
-        if f[2][0] == "+":
-            x1 = x0 + int(f[2])
-        else:
-            x1 = int(f[2])
-            if not x1:
-                x1 = x0 + dw
-        if f[3][0] == "+":
-            y1 = y0 + int(f[3])
-        elif f[3][0] == "0":
-            y1 = y0 + dh
-        else:
-            y1 = self.page_to_screen(page,int(f[3]))
-        return (x0,y0,x1,y1)
+        x = int(f[0])
+        y = self.page_to_screen(page,int(f[1]))
+        w = int(f[2])
+        if not w:
+                w = dw
+        h = int(f[3])
+        if not h:
+                h = dh
+        return (x,y,w,h)
 
     def screen_to_page(self,y): # returns 0 for first page, 1 for second page, etc
         p = 0
@@ -64,7 +57,6 @@ class PageController:
 
 
 
-
 class FormItem(QObject):
     def __init__(self,parent,pc:PageController,f,dw=0,dh=0):
         super().__init__(parent)
@@ -78,27 +70,31 @@ class FormItem(QObject):
         self.dependson = ""
         self.page = 0
         # at least temporarily there is a "P" in front of the page number - ignore it if so
-        f[5] = f[5].lstrip("P")
-        self.page = int(f[5])-1 # 0-based 
+        f[4] = f[4].lstrip("P")
+        self.page = int(f[4])-1 # 0-based 
         if len(f[3]) and f[3] != "Y":
             self.dependson = f[3]
         self.subjectlinesource = "Subject"
         self.group = -1 # gets set if part of a group
-        if len(f[3]) and f[6] != "0":
+        if len(f[3]) and f[5] != "0":
         #if f[5] != "0": # this shows all of boxes that have been defined
             self.valid = QFrame(parent)
             # expand the coordinates a litle
             e = 4
-            x0,y0,x1,y1 = self.page_controller.get_coordinates(self.page,f[6:10],dw,dh)
-            x0 -= e
-            y0 -= e
-            x1 += e
-            y1 += e
-            self.valid.setGeometry(x0,y0,x1-x0+1,y1-y0+1)
+            x,y,w,h = self.page_controller.get_coordinates(self.page,f[5:9],dw,dh)
+            x -= e
+            y -= e
+            w += 2*e
+            h += 2*e
+            self.valid.setGeometry(x,y,w,h)
             self.valid.setStyleSheet("QFrame { border: 6px solid #C02020;}")
             self.valid.setFrameStyle(QFrame.Shape.Box|QFrame.Shadow.Plain)
             self.valid.hide()
-            self.validator = f[4] # possibly a custom validator
+        # determine validator
+        self.validator = None
+        v = {"dstr":"DateValid","tstr":"TimeValid","nstr":"NumValid","pstr":"PhoneValid","estr":"EmailValid","zstr":"ZipValid"}
+        if f[2] in v:
+            self.validator = v[f[2]]
 
     def get_value(self): pass
 
@@ -109,8 +105,8 @@ class FormItemString(FormItem):
         dh = 26
         super().__init__(parent,pc,f,dw,dh)
         self.widget = QLineEdit("",parent) # or f[1]
-        x0,y0,x1,y1 = self.page_controller.get_coordinates(self.page,f[6:10],dw,dh)
-        self.widget.setGeometry(x0,y0,x1-x0+1,y1-y0+1)
+        x,y,w,h = self.page_controller.get_coordinates(self.page,f[5:9],dw,dh)
+        self.widget.setGeometry(x,y,w,h)
         font = QFont()
         #font =  self.cMailList.item(i,0).font()
         font.setBold(True)
@@ -131,8 +127,8 @@ class FormItemMultiString(FormItem):
     def __init__(self,parent,pc:PageController,f):
         super().__init__(parent,pc,f)
         self.widget = QPlainTextEdit(parent)
-        x0,y0,x1,y1 = self.page_controller.get_coordinates(self.page,f[6:10])
-        self.widget.setGeometry(x0,y0,x1-x0+1,y1-y0+1)
+        x,y,w,h = self.page_controller.get_coordinates(self.page,f[5:9])
+        self.widget.setGeometry(x,y,w,h)
         self.widget.setPlainText("") # or f[1]
         font = QFont()
         font.setBold(True)
@@ -154,14 +150,14 @@ class FormItemRadioButtons(FormItem): # always multiple buttons
         dw = 64 # default size
         dh = 14
         super().__init__(parent,pc,f,dw,dh)
-        nb = (len(f)-10)//5
+        nb = (len(f)-9)//5
         self.widget = QButtonGroup(parent)
         self.values = []
         for i in range (nb):
-            j = i*5+10
+            j = i*5+9
             tmpwidget = QRadioButton("                ",parent)
-            x0,y0,x1,y1 = self.page_controller.get_coordinates(self.page,f[j+1:j+5],dw,dh)
-            tmpwidget.setGeometry(x0,y0,x1-x0+1,y1-y0+1)
+            x,y,w,h = self.page_controller.get_coordinates(self.page,f[j+1:j+5],dw,dh)
+            tmpwidget.setGeometry(x,y,w,h)
             self.widget.addButton(tmpwidget,i)
             palette = tmpwidget.palette()
             palette.setColor(QPalette.ColorRole.Text,QColor("blue"))
@@ -191,8 +187,8 @@ class FormItemCheckBox(FormItem):
         dh = 14
         super().__init__(parent,pc,f,dw,dh)
         self.widget = QCheckBox("                ",parent) # or f[1]
-        x0,y0,x1,y1 = self.page_controller.get_coordinates(self.page,f[6:10],dw,dh)
-        self.widget.setGeometry(x0,y0,x1-x0+1,y1-y0+1)
+        x,y,w,h = self.page_controller.get_coordinates(self.page,f[5:9],dw,dh)
+        self.widget.setGeometry(x,y,w,h)
         palette = self.widget.palette()
         palette.setColor(QPalette.ColorRole.Text,QColor("blue"))
         self.widget.setPalette(palette)
@@ -209,11 +205,11 @@ class FormItemDropDown(FormItem):
         dh = 26
         super().__init__(parent,pc,f)
         self.widget = QComboBox(parent) # or f[1]
-        x0,y0,x1,y1 = self.page_controller.get_coordinates(self.page,f[6:10],dw,dh)
-        self.widget.setGeometry(x0,y0,x1-x0+1,y1-y0+1)
-        n = len(f)-10
+        x,y,w,h = self.page_controller.get_coordinates(self.page,f[5:9],dw,dh)
+        self.widget.setGeometry(x,y,w,h)
+        n = len(f)-9
         for i in range(n):
-            self.widget.addItem(f[i+10])
+            self.widget.addItem(f[i+9])
         self.widget.setCurrentIndex(-1)
         self.widget.setEditable(True)
         palette = self.widget.palette()
@@ -229,10 +225,10 @@ class FormItemRequiredGroup(FormItem):
     signalValidityCheck = Signal(FormItem)
     def __init__(self,parent,pc:PageController,f):
         super().__init__(parent,pc,f)
-        nc = (len(f)-10)
+        nc = (len(f)-9)
         self.children = []
         for i in range (nc):
-            self.children.append(f[i+10])
+            self.children.append(f[i+9])
         pass
     def get_value(self,dialog):
         for c in self.children:
@@ -307,9 +303,9 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
                             self.pages.append((l,0,1100)) # all lines
                     elif section == 4:
                         f = l.split(",")
-                        # typical line: 12.,Message,mstr,Y,valid,page,52,105,807,677
-                        # fields:       0   1       2    3 4     5    6  7   8  9
-                        if len(f) >= 10:
+                        # typical line: 12.,Message,mstr,Y,page,52,105,807,677
+                        # fields:       0   1       2    3 4    5  6   7   8
+                        if len(f) >= 9:
                             index = len(self.fields)
                             if f[0] and f[0][0] == '*':
                                 self.subjectlinesource = f[1]
@@ -318,6 +314,8 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
                                 self.fields.append(FormItemString(self.cForm,self.page_controller,f))
                             elif f[2] == "mstr":
                                 self.fields.append(FormItemMultiString(self.cForm,self.page_controller,f))
+                            elif f[2][1:] == "str": # allows all sub-variants like "dstr" for date string
+                                self.fields.append(FormItemString(self.cForm,self.page_controller,f))
                             elif f[2] == "rb":
                                 self.fields.append(FormItemRadioButtons(self.cForm,self.page_controller,f))
                             elif f[2] == "cb":
@@ -340,7 +338,7 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
 
         # if there were no pages specified, use default
         if not self.pages:
-            self.pages.append((self.form+".png",0,1100))
+            self.pages.append((self.form.replace("*.desc",".png"),0,1100))
         self.make_composite_picture()
 
         # set up any groups
@@ -350,30 +348,28 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
                     p = self.get_item_by_field_id(c)
                     if p:
                         p.group = index
-        subject = self.pd.make_standard_subject()
-        self.set_value_by_field_name("MessageNumber",subject)
-        #self.setFieldByName("Handling","PRIORITY") #test
-        # special handing for this non-conforming form
-        if self.form == "CheckInCheckOut":
-            self.set_value_by_field_name("UserCall",self.pd.getActiveUserCallSign())
-            self.set_value_by_field_name("UserName",self.pd.getUserCallSign("Name"))
-            self.set_value_by_field_name("TacticalCall",self.pd.getActiveTacticalCallSign())
-            self.set_value_by_field_name("TacticalName",self.pd.getTacticalCallSign("Name"))
-            self.set_value_by_field_name("UseTacticalCall",self.pd.getProfileBool("UseTacticalCallSign"))
-        else:
-            d = datetime.datetime.now()
-            self.set_value_by_field_name("Date","{:%m/%d/%Y}".format(d))
-            self.set_value_by_field_name("Time","{:%H:%M}".format(d))
-            self.set_value_by_field_name("OpDate","{:%m/%d/%Y}".format(d)) # these will get overwritten
-            self.set_value_by_field_name("OpTime","{:%H:%M}".format(d))
-            self.set_value_by_field_name("OpCall",self.pd.getActiveUserCallSign())
-            self.set_value_by_field_name("OpName",self.pd.getUserCallSign("Name"))
-            self.set_value_by_field_name("Method","Other")
-            self.set_value_by_field_name("Other","Packet")
-           
-
-
-        self.cSend.clicked.connect(self.onSend)
+        if self.pd: # formtool does not supply the persistent data object
+            subject = self.pd.make_standard_subject() if self.pd else ""
+            self.set_value_by_field_name("MessageNumber",subject)
+            #self.setFieldByName("Handling","PRIORITY") #test
+            # special handing for this non-conforming form
+            if self.form == "CheckInCheckOut":
+                self.set_value_by_field_name("UserCall",self.pd.getActiveUserCallSign())
+                self.set_value_by_field_name("UserName",self.pd.getUserCallSign("Name"))
+                self.set_value_by_field_name("TacticalCall",self.pd.getActiveTacticalCallSign())
+                self.set_value_by_field_name("TacticalName",self.pd.getTacticalCallSign("Name"))
+                self.set_value_by_field_name("UseTacticalCall",self.pd.getProfileBool("UseTacticalCallSign"))
+            else:
+                d = datetime.datetime.now()
+                self.set_value_by_field_name("Date","{:%m/%d/%Y}".format(d))
+                self.set_value_by_field_name("Time","{:%H:%M}".format(d))
+                self.set_value_by_field_name("OpDate","{:%m/%d/%Y}".format(d)) # these will get overwritten
+                self.set_value_by_field_name("OpTime","{:%H:%M}".format(d))
+                self.set_value_by_field_name("OpCall",self.pd.getActiveUserCallSign())
+                self.set_value_by_field_name("OpName",self.pd.getUserCallSign("Name"))
+                self.set_value_by_field_name("Method","Other")
+                self.set_value_by_field_name("Other","Packet")
+            self.cSend.clicked.connect(self.onSend)
         self.updateAll()
 
     def resizeEvent(self,event):
@@ -408,6 +404,8 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
     
     @staticmethod
     def TimeValid(s):
+        if s and len(s) == 4 and s.isdigit():
+            return True
         try:
             datetime.datetime.strptime(s,"%H:%M")
             return True
@@ -415,18 +413,12 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
             return False         
 
     @staticmethod
-    def TelValid(s):
-        # simple test, must be 7 or 10 digits, 0, 1, or 2 hyphens or spaces but no other characters
-        nd = 0
-        ns = 0
-        for c in s:
-            if c.isdigit():
-                nd += 1
-            elif c == "-" or c == " ":
-                ns += 1;
-            else:
-                return False
-        return True if  nd == 7 or nd == 10 and ns <= 2 else False
+    def PhoneValid(s):
+        m = re.match(r'^(1\s?)?(\d{3}|\(\d{3}\))[\s\-]?\d{3}[\s\-]?\d{4}(\s?x\d+)?$',s)
+        if m:
+            return True
+        else:
+            return False
 
     @staticmethod
     def NumValid(s):
