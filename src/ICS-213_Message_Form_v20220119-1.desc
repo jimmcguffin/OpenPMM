@@ -27,27 +27,27 @@ ICS-213_Message_Form_v20220119-1.png
 // First is the string that will be sent as the value for this button choice
 // Then 4 numbers for the location on screen, same details as for the main location
 
-MsgNo,MessageNumber,str,Y,P1,446,49,94,25
-1a.,Date,dstr,Y,P1,65,160,83,27
-1b.,Time,tstr,Y,P1,196,159,64,27
-5.,Handling,rb,Y,P1,412,104,402,23,IMMEDIATE,415,109,0,0,PRIORITY,564,108,0,0,ROUTINE,699,108,0,0
-6a.,TakeAction,rb,,P1,574,161,183,23,Yes,577,165,0,0,No,718,165,0,0
-6b.,Reply,rb,,P1,574,190,183,23,Yes,577,193,0,0,No,718,193,0,0
-6d.,ReplyBy,str,6b.,P1,641,191,62,18
-7.,ToIcsPosition,str,Y,P1,83,233,313,26
-8.,FromIcsPosition,str,Y,P1,469,233,320,26
-9a.,ToLocation,str,Y,P1,83,282,313,27
-9b.,FromLocation,str,Y,P1,469,282,319,27
-ToName,ToName,str,,P1,83,332,313,25
-FmName,FromName,str,,P1,469,332,319,25
-ToTel,ToTel,pstr,,P1,83,381,313,27
-FmTel,FromTel,pstr,,P1,469,381,319,27
-*10.,Subject,str,Y,P1,157,415,633,27
-11.,Reference,str,,P1,357,449,430,28
-12.,Message,mstr,Y,P1,52,505,756,173
-OpCall,OpCall,str,,P1,583,850,222,26
-OpName,OpName,str,,P1,564,885,235,21
-Method,Method,rb,,P1,47,882,376,82,Telephone,51,886,0,0,EOC Radio,51,917,0,0,Amateur Radio,51,941,0,0,Dispatch Center,189,886,0,0,FAX,189,917,0,0,Other,189,941,0,0,Courier,295,917,0,0
-Other,Other,str,,P1,258,936,144,0
-OpDate,OpDate,str,,P1,489,936,83,27
-OpTime,OpTime,str,,P1,689,936,62,27
+MsgNo,str,Y,P1,446,49,94,25
+1a.,dstr,Y,P1,65,160,83,27
+1b.,tstr,Y,P1,196,159,64,27
+5.,rb,Y,P1,412,104,402,23,IMMEDIATE,415,109,0,0,PRIORITY,564,108,0,0,ROUTINE,699,108,0,0
+6a.,rb,,P1,574,161,183,23,Yes,577,165,0,0,No,718,165,0,0
+6b.,rb,,P1,574,190,183,23,Yes,577,193,0,0,No,718,193,0,0
+6d.,str,6b.,P1,641,191,62,18
+7.,str,Y,P1,83,233,313,26
+8.,str,Y,P1,469,233,320,26
+9a.,str,Y,P1,83,282,313,27
+9b.,str,Y,P1,469,282,319,27
+ToName,str,,P1,83,332,313,25
+FmName,str,,P1,469,332,319,25
+ToTel,pstr,,P1,83,381,313,27
+FmTel,pstr,,P1,469,381,319,27
+*10.,str,Y,P1,157,415,633,27
+11.,str,,P1,357,449,430,28
+12.,mstr,Y,P1,52,505,756,173
+OpCall,str,,P1,583,850,222,26
+OpName,str,,P1,564,885,235,21
+Method,rb,,P1,47,882,376,82,Telephone,51,886,0,0,EOC Radio,51,917,0,0,Amateur Radio,51,941,0,0,Dispatch Center,189,886,0,0,FAX,189,917,0,0,Other,189,941,0,0,Courier,295,917,0,0
+Other,str,,P1,258,936,144,0
+OpDate,str,,P1,489,936,83,27
+OpTime,str,,P1,689,936,62,27

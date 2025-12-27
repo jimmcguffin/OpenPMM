@@ -64,24 +64,23 @@ class FormItem(QObject):
         self.page_controller = pc
         self.widget = QWidget(parent)
         self.label = f[0]
-        self.fieldname = f[1]
         self.valid = None
         self.validator = ""
         self.dependson = ""
         self.page = 0
         # at least temporarily there is a "P" in front of the page number - ignore it if so
-        f[4] = f[4].lstrip("P")
-        self.page = int(f[4])-1 # 0-based 
-        if len(f[3]) and f[3] != "Y":
-            self.dependson = f[3]
+        f[3] = f[3].lstrip("P")
+        self.page = int(f[3])-1 # 0-based 
+        if len(f[1]) and f[1] != "Y":
+            self.dependson = f[2]
         self.subjectlinesource = "Subject"
         self.group = -1 # gets set if part of a group
-        if len(f[3]) and f[5] != "0":
-        #if f[5] != "0": # this shows all of boxes that have been defined
+        if len(f[2]) and f[4] != "0":
+        #if f[4] != "0": # this shows all of boxes that have been defined
             self.valid = QFrame(parent)
             # expand the coordinates a litle
             e = 4
-            x,y,w,h = self.page_controller.get_coordinates(self.page,f[5:9],dw,dh)
+            x,y,w,h = self.page_controller.get_coordinates(self.page,f[4:8],dw,dh)
             x -= e
             y -= e
             w += 2*e
@@ -93,8 +92,8 @@ class FormItem(QObject):
         # determine validator
         self.validator = None
         v = {"dstr":"DateValid","tstr":"TimeValid","nstr":"NumValid","pstr":"PhoneValid","estr":"EmailValid","zstr":"ZipValid"}
-        if f[2] in v:
-            self.validator = v[f[2]]
+        if f[1] in v:
+            self.validator = v[f[1]]
 
     def get_value(self): pass
 
@@ -105,7 +104,7 @@ class FormItemString(FormItem):
         dh = 26
         super().__init__(parent,pc,f,dw,dh)
         self.widget = QLineEdit("",parent) # or f[1]
-        x,y,w,h = self.page_controller.get_coordinates(self.page,f[5:9],dw,dh)
+        x,y,w,h = self.page_controller.get_coordinates(self.page,f[4:8],dw,dh)
         self.widget.setGeometry(x,y,w,h)
         font = QFont()
         #font =  self.cMailList.item(i,0).font()
@@ -127,7 +126,7 @@ class FormItemMultiString(FormItem):
     def __init__(self,parent,pc:PageController,f):
         super().__init__(parent,pc,f)
         self.widget = QPlainTextEdit(parent)
-        x,y,w,h = self.page_controller.get_coordinates(self.page,f[5:9])
+        x,y,w,h = self.page_controller.get_coordinates(self.page,f[4:8])
         self.widget.setGeometry(x,y,w,h)
         self.widget.setPlainText("") # or f[1]
         font = QFont()
@@ -150,11 +149,11 @@ class FormItemRadioButtons(FormItem): # always multiple buttons
         dw = 64 # default size
         dh = 14
         super().__init__(parent,pc,f,dw,dh)
-        nb = (len(f)-9)//5
+        nb = (len(f)-8)//5
         self.widget = QButtonGroup(parent)
         self.values = []
         for i in range (nb):
-            j = i*5+9
+            j = i*5+8
             tmpwidget = QRadioButton("                ",parent)
             x,y,w,h = self.page_controller.get_coordinates(self.page,f[j+1:j+5],dw,dh)
             tmpwidget.setGeometry(x,y,w,h)
@@ -187,7 +186,7 @@ class FormItemCheckBox(FormItem):
         dh = 14
         super().__init__(parent,pc,f,dw,dh)
         self.widget = QCheckBox("                ",parent) # or f[1]
-        x,y,w,h = self.page_controller.get_coordinates(self.page,f[5:9],dw,dh)
+        x,y,w,h = self.page_controller.get_coordinates(self.page,f[4:8],dw,dh)
         self.widget.setGeometry(x,y,w,h)
         palette = self.widget.palette()
         palette.setColor(QPalette.ColorRole.Text,QColor("blue"))
@@ -205,11 +204,11 @@ class FormItemDropDown(FormItem):
         dh = 26
         super().__init__(parent,pc,f)
         self.widget = QComboBox(parent) # or f[1]
-        x,y,w,h = self.page_controller.get_coordinates(self.page,f[5:9],dw,dh)
+        x,y,w,h = self.page_controller.get_coordinates(self.page,f[4:8],dw,dh)
         self.widget.setGeometry(x,y,w,h)
-        n = len(f)-9
+        n = len(f)-8
         for i in range(n):
-            self.widget.addItem(f[i+9])
+            self.widget.addItem(f[i+8])
         self.widget.setCurrentIndex(-1)
         self.widget.setEditable(True)
         palette = self.widget.palette()
@@ -225,14 +224,14 @@ class FormItemRequiredGroup(FormItem):
     signalValidityCheck = Signal(FormItem)
     def __init__(self,parent,pc:PageController,f):
         super().__init__(parent,pc,f)
-        nc = (len(f)-9)
+        nc = (len(f)-8)
         self.children = []
         for i in range (nc):
-            self.children.append(f[i+9])
+            self.children.append(f[i+8])
         pass
     def get_value(self,dialog):
         for c in self.children:
-            v = dialog.get_value_by_field_id(c)
+            v = dialog.get_value_by_id(c)
             if v:
                 return True
         return False
@@ -254,7 +253,6 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
         self.footers = []
         self.fields = [] # a list of FormItem objects
         self.fieldid = {}  # a dictionary that maps the field id to the index
-        self.fieldname = {}  # a dictionary that maps the field name to the index
         #self.group = {}  # a dictionary that maps the field id to a container group, if there is one (rare)
         section = 0 # 1 = headers, 2 = footers, 3 = fields, 4 = dependencies
         try:
@@ -303,32 +301,30 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
                             self.pages.append((l,0,1100)) # all lines
                     elif section == 4:
                         f = l.split(",")
-                        # typical line: 12.,Message,mstr,Y,page,52,105,807,677
-                        # fields:       0   1       2    3 4    5  6   7   8
-                        if len(f) >= 9:
+                        # typical line: 12.,mstr,Y,page,52,105,100,20
+                        # fields:       0   1    2 3    4  5   6   7 
+                        if len(f) >= 8:
                             index = len(self.fields)
                             if f[0] and f[0][0] == '*':
-                                self.subjectlinesource = f[1]
                                 f[0] = f[0][1:]
-                            if f[2] == "str":
+                                self.subjectlinesource = f[0]
+                            if f[1] == "str":
                                 self.fields.append(FormItemString(self.cForm,self.page_controller,f))
-                            elif f[2] == "mstr":
+                            elif f[1] == "mstr":
                                 self.fields.append(FormItemMultiString(self.cForm,self.page_controller,f))
-                            elif f[2][1:] == "str": # allows all sub-variants like "dstr" for date string
+                            elif f[1][1:] == "str": # allows all sub-variants like "dstr" for date string
                                 self.fields.append(FormItemString(self.cForm,self.page_controller,f))
-                            elif f[2] == "rb":
+                            elif f[1] == "rb":
                                 self.fields.append(FormItemRadioButtons(self.cForm,self.page_controller,f))
-                            elif f[2] == "cb":
+                            elif f[1] == "cb":
                                 self.fields.append(FormItemCheckBox(self.cForm,self.page_controller,f))
-                            elif f[2] == "dd":
+                            elif f[1] == "dd":
                                 self.fields.append(FormItemDropDown(self.cForm,self.page_controller,f))
-                            elif f[2] == "rg":
+                            elif f[1] == "rg":
                                 self.fields.append(FormItemRequiredGroup(self.cForm,self.page_controller,f))
                             if len(self.fields) > index: #something was added, add to dictionaries
                                 if f[0]:
                                     self.fieldid[f[0]] = index
-                                if f[1]:
-                                    self.fieldname[f[1]] = index
                                 self.fields[index].signalValidityCheck.connect(self.updateSingle)
 
                     elif section == 5:
@@ -345,30 +341,29 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
         for index, f in enumerate(self.fields):
             if isinstance(f,FormItemRequiredGroup):
                 for c in f.children:
-                    p = self.get_item_by_field_id(c)
+                    p = self.get_item_by_id(c)
                     if p:
                         p.group = index
         if self.pd: # formtool does not supply the persistent data object
             subject = self.pd.make_standard_subject() if self.pd else ""
-            self.set_value_by_field_name("MessageNumber",subject)
-            #self.setFieldByName("Handling","PRIORITY") #test
+            self.set_value_by_id("MsgNo",subject)
             # special handing for this non-conforming form
-            if self.form == "CheckInCheckOut":
-                self.set_value_by_field_name("UserCall",self.pd.getActiveUserCallSign())
-                self.set_value_by_field_name("UserName",self.pd.getUserCallSign("Name"))
-                self.set_value_by_field_name("TacticalCall",self.pd.getActiveTacticalCallSign())
-                self.set_value_by_field_name("TacticalName",self.pd.getTacticalCallSign("Name"))
-                self.set_value_by_field_name("UseTacticalCall",self.pd.getProfileBool("UseTacticalCallSign"))
+            if self.form == "CheckInCheckOut.desc":
+                self.set_value_by_id ("UserCall",self.pd.getActiveUserCallSign())
+                self.set_value_by_id("UserName",self.pd.getUserCallSign("Name"))
+                self.set_value_by_id("TacticalCall",self.pd.getActiveTacticalCallSign())
+                self.set_value_by_id("TacticalName",self.pd.getTacticalCallSign("Name"))
+                self.set_value_by_id("UseTacticalCall",self.pd.getProfileBool("UseTacticalCallSign"))
             else:
                 d = datetime.datetime.now()
-                self.set_value_by_field_name("Date","{:%m/%d/%Y}".format(d))
-                self.set_value_by_field_name("Time","{:%H:%M}".format(d))
-                self.set_value_by_field_name("OpDate","{:%m/%d/%Y}".format(d)) # these will get overwritten
-                self.set_value_by_field_name("OpTime","{:%H:%M}".format(d))
-                self.set_value_by_field_name("OpCall",self.pd.getActiveUserCallSign())
-                self.set_value_by_field_name("OpName",self.pd.getUserCallSign("Name"))
-                self.set_value_by_field_name("Method","Other")
-                self.set_value_by_field_name("Other","Packet")
+                self.set_value_by_id("1a.","{:%m/%d/%Y}".format(d))
+                self.set_value_by_id("1b.","{:%H:%M}".format(d))
+                self.set_value_by_id("OpDate","{:%m/%d/%Y}".format(d)) # these will get overwritten
+                self.set_value_by_id("OpTime","{:%H:%M}".format(d))
+                self.set_value_by_id("OpCall",self.pd.getActiveUserCallSign())
+                self.set_value_by_id("OpName",self.pd.getUserCallSign("Name"))
+                self.set_value_by_id("Method","Other")
+                self.set_value_by_id("Other","Packet")
             self.cSend.clicked.connect(self.onSend)
         self.updateAll()
 
@@ -446,7 +441,7 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
                 if callable(func):
                     v = func(v)  # v is now a bool but that is all we need
             if not v and f.dependson:
-                tmp = self.get_item_by_field_id(f.dependson)
+                tmp = self.get_item_by_id(f.dependson)
                 if (tmp):
                     tmpv = tmp.get_value()
                     if tmpv == "No":
@@ -481,7 +476,7 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
                 value += line
                 if value[-1] != ']' or value[-2:] == "`]":
                     continue
-                self.set_value_by_field_id(id,value[1:-1])
+                self.set_value_by_id(id,value[1:-1])
                 value = ""
                 continue
             id,_,r = line.partition(":")
@@ -490,51 +485,40 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
                 value = ""
                 continue
             if value[-1] == ']' and value[-2:] != "`]": 
-                self.set_value_by_field_id(id,value[1:-1])
+                self.set_value_by_id(id,value[1:-1])
                 value = ""
         self.updateAll()
         
-    def get_item_by_field_id(self,fname) -> FormItem:
+    def get_item_by_id(self,fname) -> FormItem:
         if fname in self.fieldid:
             return self.fields[self.fieldid[fname]]
         return None
 
-    def get_item_by_field_name(self,fname) -> FormItem:
-        if fname in self.fieldid:
-            return self.fields[self.fieldname[fname]]
-        return None
-
-    def set_value_by_field_id(self,fname,value):
+    def set_value_by_id(self,fname,value):
         if fname in self.fieldid:
             self.fields[self.fieldid[fname]].setValue(value)
-    def get_value_by_field_id(self,fname):
+
+    def get_value_by_id(self,fname):
         if fname in self.fieldid:
             return self.fields[self.fieldid[fname]].get_value()
         return ""
-    def set_value_by_field_name(self,fname,value):
-        if fname in self.fieldname:
-            self.fields[self.fieldname[fname]].setValue(value)
-    def get_value_by_field_name(self,fname):
-        if fname in self.fieldname:
-            return self.fields[self.fieldname[fname]].get_value()
-        return ""
-        
+
     def onSend(self):
         # checkincheckout is comepletely different than any other
-        if self.form == "CheckInCheckOut":
+        if self.form == "CheckInCheckOut.desc":
             handling = "R"
-            line1 = self.get_value_by_field_name("Type") + " "
+            line1 = self.get_value_by_id("Type") + " "
             line2 = ""
-            usetactical = True if self.get_value_by_field_name("UseTacticalCall") else False
+            usetactical = True if self.get_value_by_id("UseTacticalCall") else False
             if usetactical:
-                line1 += self.get_value_by_field_name("TacticalCall") + ",  " + self.get_value_by_field_name("TacticalName")
-                line2 = self.get_value_by_field_name("UserCall") + " , " + self.get_value_by_field_name("UserName")
+                line1 += self.get_value_by_id("TacticalCall") + ",  " + self.get_value_by_id("TacticalName")
+                line2 = self.get_value_by_id("UserCall") + " , " + self.get_value_by_id("UserName")
                 message = line1 + "\n" + line2 + "\n"
             else:
-                line1 += self.get_value_by_field_name("UserCall") + " , " + self.get_value_by_field_name("UserName")
+                line1 += self.get_value_by_id("UserCall") + " , " + self.get_value_by_id("UserName")
                 message = line1 + "\n"
 
-            subject = self.get_value_by_field_name("MessageNumber") + "_" + handling[0] + "_" + line1
+            subject = self.get_value_by_id("MsgNo") + "_" + handling[0] + "_" + line1
         else:
             message = ""
             for h in self.headers:
@@ -546,8 +530,8 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
                         message += f"{f.label}: [{v}]\n"
             for f in self.footers:
                 message += f + "\n"
-            handling = self.get_value_by_field_name("Handling")
+            handling = self.get_value_by_id("5.")
             if not handling: handling = "?"
-            subject = self.get_value_by_field_name("MessageNumber") + "_" + handling[0] + "_" + self.formid + "_" + self.get_value_by_field_name(self.subjectlinesource) 
+            subject = self.get_value_by_id("MsgNo") + "_" + handling[0] + "_" + self.formid + "_" + self.get_value_by_id(self.subjectlinesource) 
         global_signals.signal_new_outgoing_form_message.emit(subject,message,handling[0] == 'I',self.to_addr)
         self.close()

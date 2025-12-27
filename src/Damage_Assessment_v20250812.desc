@@ -13,40 +13,40 @@ DmgAsmt,Damage_Assessment_v20250812.png
 
 [Fields]
 // see the ICS213 file for a description of these lines
-MsgNo,MessageNumber,str,,P1,289,80,108,22
-1a.,Date,dstr,Y,P1,90,148,72,22
-1b.,Time,tstr,Y,P1,243,148,60,22
-5.,Handling,rb,Y,P1,377,147,358,24,IMMEDIATE,384,150,0,0,PRIORITY,517,150,0,0,ROUTINE,630,150,0,0
-7a.,ToIcsPosition,dd,Y,P1,165,177,240,23,Damage/Safety Assessment Group,Construction & Eng. Branch,Operations
-8a.,FromIcsPosition,str,Y,P1,520,177,217,23
-7b.,ToLocation,str,Y,P1,146,206,259,23
-8b.,FromLocation,str,Y,P1,501,206,236,23
-7c.,ToName,str,,P1,130,236,275,22
-8c.,FromName,str,,P1,485,236,252,22
-7d.,ToContactInfo,str,,P1,168,264,237,24
-8d.,FromContactInfo,str,,P1,523,264,214,24
-20.,Jurisdiction,dd,Y,P1,186,318,206,19,Campbell,Cupertino,Gilroy,Los Altos,Los Altos Hills,Los Gatos,Milpitas,Monte Sereno,Morgan Hill,Mountain View,Palo Alto,San Jose,Santa Clara (City),Saratoga,Sunnyvale,Santa Clara County,County unincorporated
-21.,IncidentName,str,Y,P1,511,319,225,16
-*22.,Address,str,Y,P1,109,343,282,17
-23.,Unit,str,,P1,471,343,265,16
-24.,TypeOfStructure,rb,Y,P1,187,365,416,39,Single Family,196,366,0,0,Mobile Home,337,366,0,0,Non-Profit Orgs,478,366,0,0,Multi-Family,196,386,0,0,Business,337,386,0,0,Outbuilding,478,386,0,0
-25.,NumberOfStories,nstr,Y,P1,170,409,566,17
-26.,OwnRent,rb,,P1,189,431,255,19,Own,196,432,0,0,Rent,385,432,0,0
+MsgNo,str,,P1,289,80,108,22
+1a.,dstr,Y,P1,90,148,72,22
+1b.,tstr,Y,P1,243,148,60,22
+5.,rb,Y,P1,377,147,358,24,IMMEDIATE,384,150,0,0,PRIORITY,517,150,0,0,ROUTINE,630,150,0,0
+7a.,dd,Y,P1,165,177,240,23,Damage/Safety Assessment Group,Construction & Eng. Branch,Operations
+8a.,str,Y,P1,520,177,217,23
+7b.,str,Y,P1,146,206,259,23
+8b.,str,Y,P1,501,206,236,23
+7c.,str,,P1,130,236,275,22
+8c.,str,,P1,485,236,252,22
+7d.,str,,P1,168,264,237,24
+8d.,str,,P1,523,264,214,24
+20.,dd,Y,P1,186,318,206,19,Campbell,Cupertino,Gilroy,Los Altos,Los Altos Hills,Los Gatos,Milpitas,Monte Sereno,Morgan Hill,Mountain View,Palo Alto,San Jose,Santa Clara (City),Saratoga,Sunnyvale,Santa Clara County,County unincorporated
+21.,str,Y,P1,511,319,225,16
+*22.,str,Y,P1,109,343,282,17
+23.,str,,P1,471,343,265,16
+24.,rb,Y,P1,187,365,416,39,Single Family,196,366,0,0,Mobile Home,337,366,0,0,Non-Profit Orgs,478,366,0,0,Multi-Family,196,386,0,0,Business,337,386,0,0,Outbuilding,478,386,0,0
+25.,nstr,Y,P1,170,409,566,17
+26.,rb,,P1,189,431,255,19,Own,196,432,0,0,Rent,385,432,0,0
 // these must come before the items they control, the id serves only as a clue about what items it is controlling
-27.,DamageType,rg,Y,P1,194,454,426,39
-27a.,Flooding,cb,,P1,198,456,0,0
-27b.,Roof,cb,,P1,198,476,0,0
-27c.,Structural,cb,,P1,433,456,0,0
-27d.,OtherDamage,cb,,P1,433,476,0,0
-28.,BasementType,rb,Y,P1,187,495,388,40,Basement,196,495,0,0,Crawlspace,196,515,0,0,Basement and Crawlspace,384,497,0,0,N/A,384,517,0,0
-29.,DamageClassification,rb,Y,P1,137,555,486,39,Destroyed,149,557,0,0,Major,149,577,0,0,Minor,291,557,0,0,Affected,291,577,0,0,No Visible Damage,479,557,0,0
-30.,Tag,rb,,P1,137,597,388,22,Green,149,599,0,0,Yellow,292,599,0,0,Red,431,599,0,0
-31.,Insurance,rb,,P1,147,620,144,21,Yes,151,622,0,0,No,241,622,0,0
-32.,EstimatedDamage,nstr,,P1,540,623,196,17
-33.,Comment,mstr,,P1,127,647,609,81
-34.,ContactName,str,Y,P1,147,736,249,28
-35.,ContactPhone,pstr,Y,P1,502,736,234,28
-OpName,OpName,str,,P1,95,828,214,19
-OpCall,OpCall,str,,P1,374,828,104,19
-OpDate,OpDate,dstr,,P1,522,828,70,18
-OpTime,OpTime,tstr,,P1,655,828,60,18
+27.,rg,Y,P1,194,454,426,39
+27a.,cb,,P1,198,456,0,0
+27b.,cb,,P1,198,476,0,0
+27c.,cb,,P1,433,456,0,0
+27d.,cb,,P1,433,476,0,0
+28.,rb,Y,P1,187,495,388,40,Basement,196,495,0,0,Crawlspace,196,515,0,0,Basement and Crawlspace,384,497,0,0,N/A,384,517,0,0
+29.,rb,Y,P1,137,555,486,39,Destroyed,149,557,0,0,Major,149,577,0,0,Minor,291,557,0,0,Affected,291,577,0,0,No Visible Damage,479,557,0,0
+30.,rb,,P1,137,597,388,22,Green,149,599,0,0,Yellow,292,599,0,0,Red,431,599,0,0
+31.,rb,,P1,147,620,144,21,Yes,151,622,0,0,No,241,622,0,0
+32.,nstr,,P1,540,623,196,17
+33.,mstr,,P1,127,647,609,81
+34.,str,Y,P1,147,736,249,28
+35.,pstr,Y,P1,502,736,234,28
+OpName,str,,P1,95,828,214,19
+OpCall,str,,P1,374,828,104,19
+OpDate,dstr,,P1,522,828,70,18
+OpTime,tstr,,P1,655,828,60,18
