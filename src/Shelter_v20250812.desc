@@ -28,7 +28,7 @@ MsgNo,str,,P1,315,86,143,22
 *21.,str,Y,P1,157,346,631,20
 22.,str,Y,P1,124,371,664,20
 // these must come before the items they control, the id serves only as a clue about what items it is controlling
-23.,rg,Y,P1,159,395,522,43
+23.,rg,Y,P1,159,395,522,43,23a.,23b.,23c.,23d.,23e.
 23a.,cb,,P1,165,397,0,0
 23c.,cb,,P1,315,397,0,0
 23e.,cb,,P1,565,397,0,0

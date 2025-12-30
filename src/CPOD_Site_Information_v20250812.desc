@@ -15,7 +15,7 @@ CPOD_Site_Information_v20250812-2.png[50:796]
 [Fields]
 // Page 1
 MsgNo,str,Y,P1,304,54,145,23
-1a.,dstr,Y,P1,100,127,70,26
+1a.,dstr,Y,P1,100,127,80,26
 1b.,tstr,Y,P1,284,127,60,26
 5.,rb,Y,P1,415,126,367,29,IMMEDIATE,420,133,0,0,PRIORITY,555,133,0,0,ROUTINE,667,133,0,0
 7a.,dd,Y,P1,170,163,251,25,CPOD Unit,Mass Care & Emerg. Asst. Branc,Operations
@@ -27,7 +27,7 @@ MsgNo,str,Y,P1,304,54,145,23
 7d.,str,,P1,173,257,248,20
 8d.,str,,P1,542,257,240,20
 20.,dd,Y,P1,142,312,640,18,Campbell,Cupertino,Gilroy,Los Altos,Los Altos Hills,Los Gatos,Milpitas,Monte Sereno,Morgan Hill,Mountain View,Palo Alto,San Jose,Santa Clara (City),Saratoga,Sunnyvale,Santa Clara County,County unincorporated
-21d.,dstr,Y,P1,163,339,70,16
+21d.,dstr,Y,P1,163,339,80,16
 21t.,tstr,Y,P1,532,339,60,16
 *22.,str,Y,P1,135,364,647,17
 23.,rb,Y,P1,152,387,627,41,Type I,165,389,0,0,Type II,165,411,0,0,Type III,315,389,0,0,LSA,315,411,0,0,Non-CPOD Distribution Point,565,389,0,0
@@ -63,10 +63,10 @@ MsgNo,str,Y,P1,304,54,145,23
 52b.,cb,,P1,215,1011,328,16
 52c.,cb,,P1,215,1033,516,16
 // Page 2
-60d.,dstr,,P2,167,80,70,17
+60d.,dstr,,P2,167,80,80,17
 60t.,tstr,,P2,472,80,70,17
-61d.,dstr,,P2,167,105,60,17
-61t.,tstr,,P2,472,105,60,17
+61d.,dstr,,P2,167,105,80,17
+61t.,tstr,,P2,472,105,70,17
 70a.,str,Y,P2,262,164,520,20
 70b.,nstr,Y,P2,262,200,70,17
 70c.,nstr,Y,P2,468,200,70,17

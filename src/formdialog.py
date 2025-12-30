@@ -64,8 +64,7 @@ class FormItem(QObject):
         self.page_controller = pc
         self.widget = QWidget(parent)
         self.label = f[0]
-        self.valid = None
-        self.validator = ""
+        self.validity_indicator = None
         self.dependson = ""
         self.page = 0
         # at least temporarily there is a "P" in front of the page number - ignore it if so
@@ -76,8 +75,7 @@ class FormItem(QObject):
         self.subjectlinesource = "Subject"
         self.group = -1 # gets set if part of a group
         if len(f[2]) and f[4] != "0":
-        #if f[4] != "0": # this shows all of boxes that have been defined
-            self.valid = QFrame(parent)
+            self.validity_indicator = QFrame(parent)
             # expand the coordinates a litle
             e = 4
             x,y,w,h = self.page_controller.get_coordinates(self.page,f[4:8],dw,dh)
@@ -85,17 +83,15 @@ class FormItem(QObject):
             y -= e
             w += 2*e
             h += 2*e
-            self.valid.setGeometry(x,y,w,h)
-            self.valid.setStyleSheet("QFrame { border: 6px solid #C02020;}")
-            self.valid.setFrameStyle(QFrame.Shape.Box|QFrame.Shadow.Plain)
-            self.valid.hide()
-        # determine validator
-        self.validator = None
-        v = {"dstr":"DateValid","tstr":"TimeValid","nstr":"NumValid","pstr":"PhoneValid","estr":"EmailValid","zstr":"ZipValid"}
-        if f[1] in v:
-            self.validator = v[f[1]]
+            self.validity_indicator.setGeometry(x,y,w,h)
+            self.validity_indicator.setStyleSheet("QFrame { border: 6px solid #C02020;}")
+            self.validity_indicator.setFrameStyle(QFrame.Shape.Box|QFrame.Shadow.Plain)
+            self.validity_indicator.hide()
 
     def get_value(self): pass
+
+    def is_valid(self):
+        return True
 
 class FormItemString(FormItem):
     signalValidityCheck = Signal(FormItem)
@@ -120,6 +116,81 @@ class FormItemString(FormItem):
 
     def setValue(self,value):
         return self.widget.setText(value)
+    
+    def is_valid(self):
+        s = self.get_value()
+        return len(s) > 0
+
+class FormItemDateString(FormItemString):
+    def __init__(self,parent,pc:PageController,f):
+        super().__init__(parent,pc,f)
+        self.widget.setPlaceholderText("mm/dd/yyyy")
+
+    def is_valid(self):
+        s = self.get_value()
+        try:
+            datetime.datetime.strptime(s,"%m/%d/%Y")
+            return True
+        except ValueError:
+            return False         
+
+class FormItemTimeString(FormItemString):
+    def __init__(self,parent,pc:PageController,f):
+        super().__init__(parent,pc,f)
+        self.widget.setPlaceholderText("hh:mm")
+
+    def is_valid(self):
+        s = self.get_value()
+        if s and len(s) == 4 and s.isdigit():
+            return True
+        try:
+            datetime.datetime.strptime(s,"%H:%M")
+            return True
+        except ValueError:
+            return False         
+
+class FormItemNumberString(FormItemString):
+    def __init__(self,parent,pc:PageController,f):
+        super().__init__(parent,pc,f)
+
+    def is_valid(self):
+        s = self.get_value()
+        if not s or s.startswith("0"): return False
+        return s.isdigit()
+
+class FormItemPhoneString(FormItemString):
+    def __init__(self,parent,pc:PageController,f):
+        super().__init__(parent,pc,f)
+        if self.validity_indicator:
+            self.widget.setPlaceholderText("###-###-####")
+
+    def is_valid(self):
+        s = self.get_value()
+        m = re.match(r'^(1\s?)?(\d{3}|\(\d{3}\))[\s\-]?\d{3}[\s\-]?\d{4}(\s?x\d+)?$',s)
+        if m:
+            return True
+        else:
+            return False
+
+class FormItemEmailString(FormItemString):
+    def __init__(self,parent,pc:PageController,f):
+        super().__init__(parent,pc,f)
+
+    def is_valid(self):
+        s = self.get_value()
+        m = re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',s)
+        if m:
+            return True
+        else:
+            return False
+
+class FormItemZipString(FormItemString):
+    def __init__(self,parent,pc:PageController,f):
+        super().__init__(parent,pc,f)
+
+    def is_valid(self):
+        s = self.get_value()
+        return s and len(s) == 5 and s.isdigit()
 
 class FormItemMultiString(FormItem):
     signalValidityCheck = Signal(FormItem)
@@ -142,6 +213,10 @@ class FormItemMultiString(FormItem):
 
     def setValue(self,value):
         return self.widget.setPlainText(value.replace("`]","]").replace("\\n","\n"))
+
+    def is_valid(self):
+        s = self.get_value()
+        return len(s) > 0
 
 class FormItemRadioButtons(FormItem): # always multiple buttons
     signalValidityCheck = Signal(FormItem)
@@ -179,6 +254,10 @@ class FormItemRadioButtons(FormItem): # always multiple buttons
             if v == value:
                 self.widget.button(i).setChecked(True)
 
+    def is_valid(self):
+        return bool(self.get_value())
+    
+
 class FormItemCheckBox(FormItem):
     signalValidityCheck = Signal(FormItem)
     def __init__(self,parent,pc:PageController,f):
@@ -192,10 +271,15 @@ class FormItemCheckBox(FormItem):
         palette.setColor(QPalette.ColorRole.Text,QColor("blue"))
         self.widget.setPalette(palette)
         self.widget.clicked.connect(lambda: self.signalValidityCheck.emit(self))
+
     def get_value(self):
         return "checked" if self.widget.isChecked() else ""
+
     def setValue(self,value):
         return self.widget.setChecked(value)
+
+    def is_valid(self):
+        return bool(self.get_value())
 
 class FormItemDropDown(FormItem):
     signalValidityCheck = Signal(FormItem)
@@ -215,28 +299,38 @@ class FormItemDropDown(FormItem):
         palette.setColor(QPalette.ColorRole.Text,QColor("blue"))
         self.widget.setPalette(palette)
         self.widget.currentTextChanged.connect(lambda: self.signalValidityCheck.emit(self))
+
     def get_value(self):
         return self.widget.currentText()
+
     def setValue(self,value):
         return self.widget.setCurrentText(value)
 
+    def is_valid(self):
+        return bool(self.get_value())
+
 class FormItemRequiredGroup(FormItem):
     signalValidityCheck = Signal(FormItem)
-    def __init__(self,parent,pc:PageController,f):
+    def __init__(self,parent,dialog,pc:PageController,f):
         super().__init__(parent,pc,f)
+        self.dialog = dialog
         nc = (len(f)-8)
         self.children = []
         for i in range (nc):
             self.children.append(f[i+8])
-        pass
-    def get_value(self,dialog):
+
+    def get_value(self):
         for c in self.children:
-            v = dialog.get_value_by_id(c)
+            v = self.dialog.get_value_by_id(c)
             if v:
                 return True
         return False
+
     def setValue(self,value):
         pass
+
+    def is_valid(self):
+        return bool(self.get_value())
 
 
 class FormDialog(QMainWindow,Ui_FormDialogClass):
@@ -310,10 +404,20 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
                                 self.subjectlinesource = f[0]
                             if f[1] == "str":
                                 self.fields.append(FormItemString(self.cForm,self.page_controller,f))
+                            elif f[1] == "dstr":
+                                self.fields.append(FormItemDateString(self.cForm,self.page_controller,f))
+                            elif f[1] == "tstr":
+                                self.fields.append(FormItemTimeString(self.cForm,self.page_controller,f))
+                            elif f[1] == "nstr":
+                                self.fields.append(FormItemNumberString(self.cForm,self.page_controller,f))
+                            elif f[1] == "pstr":
+                                self.fields.append(FormItemPhoneString(self.cForm,self.page_controller,f))
+                            elif f[1] == "estr":
+                                self.fields.append(FormItemEmailString(self.cForm,self.page_controller,f))
+                            elif f[1] == "zstr":
+                                self.fields.append(FormItemZipString(self.cForm,self.page_controller,f))
                             elif f[1] == "mstr":
                                 self.fields.append(FormItemMultiString(self.cForm,self.page_controller,f))
-                            elif f[1][1:] == "str": # allows all sub-variants like "dstr" for date string
-                                self.fields.append(FormItemString(self.cForm,self.page_controller,f))
                             elif f[1] == "rb":
                                 self.fields.append(FormItemRadioButtons(self.cForm,self.page_controller,f))
                             elif f[1] == "cb":
@@ -321,7 +425,7 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
                             elif f[1] == "dd":
                                 self.fields.append(FormItemDropDown(self.cForm,self.page_controller,f))
                             elif f[1] == "rg":
-                                self.fields.append(FormItemRequiredGroup(self.cForm,self.page_controller,f))
+                                self.fields.append(FormItemRequiredGroup(self.cForm,self,self.page_controller,f))
                             if len(self.fields) > index: #something was added, add to dictionaries
                                 if f[0]:
                                     self.fieldid[f[0]] = index
@@ -389,68 +493,21 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
         self.cForm.setPixmap(pm)
         self.scrollArea.setWidget(self.cForm)
 
-    @staticmethod
-    def DateValid(s):
-        try:
-            datetime.datetime.strptime(s,"%m/%d/%Y")
-            return True
-        except ValueError:
-            return False         
-    
-    @staticmethod
-    def TimeValid(s):
-        if s and len(s) == 4 and s.isdigit():
-            return True
-        try:
-            datetime.datetime.strptime(s,"%H:%M")
-            return True
-        except ValueError:
-            return False         
-
-    @staticmethod
-    def PhoneValid(s):
-        m = re.match(r'^(1\s?)?(\d{3}|\(\d{3}\))[\s\-]?\d{3}[\s\-]?\d{4}(\s?x\d+)?$',s)
-        if m:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def NumValid(s):
-        if not s or s.startswith("0"): return False
-        return s.isdigit()
-
-    @staticmethod
-    def ZipValid(s):
-        return s and len(s) == 5 and s.isdigit()
-
     # if any item gets changed, we get here
     def updateSingle(self,f:FormItem):
-        if (f.valid):
-            # the next block of code decides if the data is valid
-            # if it is, the frame will be hidden,
-            # otherwise it will be shown, indicating that a valid entry is required
-            # v changes types as it goes through the code but True/non-zero/non-empty string all mean "Valid"
-            if isinstance(f,FormItemRequiredGroup):
-                # these need additional help
-                v = f.get_value(self)
-            else:
-                v = f.get_value().lstrip().rstrip()
-            if f.validator and hasattr(self,f.validator):
-                func = getattr(self,f.validator)
-                if callable(func):
-                    v = func(v)  # v is now a bool but that is all we need
+        if (f.validity_indicator):
+            v = f.is_valid()
             if not v and f.dependson:
                 tmp = self.get_item_by_id(f.dependson)
                 if (tmp):
                     tmpv = tmp.get_value()
                     if tmpv == "No":
                         tmpv = ""
-                    v = not tmpv# add other non-values
+                    v = not tmpv
             if v:
-                f.valid.hide()
+                f.validity_indicator.hide()
             else:
-                f.valid.show()
+                f.validity_indicator.show()
         if f.group >= 0:
             self.updateSingle(self.fields[f.group])
         # even though this item is not required there might be something that depends on it

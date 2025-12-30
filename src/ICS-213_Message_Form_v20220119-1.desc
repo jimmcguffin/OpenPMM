@@ -28,7 +28,7 @@ ICS-213_Message_Form_v20220119-1.png
 // Then 4 numbers for the location on screen, same details as for the main location
 
 MsgNo,str,Y,P1,446,49,94,25
-1a.,dstr,Y,P1,65,160,83,27
+1a.,dstr,Y,P1,65,160,88,27
 1b.,tstr,Y,P1,196,159,64,27
 5.,rb,Y,P1,412,104,402,23,IMMEDIATE,415,109,0,0,PRIORITY,564,108,0,0,ROUTINE,699,108,0,0
 6a.,rb,,P1,574,161,183,23,Yes,577,165,0,0,No,718,165,0,0
