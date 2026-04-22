@@ -580,6 +580,8 @@
     <addaction name="actionPack_Column_Widths"/>
     <addaction name="actionReset_Form_to_Normal"/>
     <addaction name="separator"/>
+    <addaction name="actionKISS_On"/>
+    <addaction name="actionKISS_Off"/>
     <addaction name="actionMonitor"/>
    </widget>
    <widget class="QMenu" name="menuForms">
@@ -997,6 +999,16 @@
   <action name="actionMonitor">
    <property name="text">
     <string>Monitor...</string>
+   </property>
+  </action>
+  <action name="actionKISS_On">
+   <property name="text">
+    <string>KISS On</string>
+   </property>
+  </action>
+  <action name="actionKISS_Off">
+   <property name="text">
+    <string>KISS Off</string>
    </property>
   </action>
  </widget>

@@ -12,21 +12,6 @@
 ICS-213_Message_Form_v20220119-1.png
 
 [Fields]
-// there must be one and only one line that starts with a "*"
-// that entry will be become a part of the standard subject line
-// FieldId as it appears in outgoing message (followed by a ": ")
-// FieldName, does not appear anywhere, currently if it contains "Date" or "Time" triggers a validity check (or it will soon)
-// Type, can be "str" for string, "mstr" for multiline string, "rb" for a set of radio buttons, "cb" for a checkbox
-// RequireFlag, must be Y or N or blank (same as N)
-// ValidityCheck, if blank it just means "any entry", otherewise is a function name
-// 4 numbers for the location on screen, assumes 850x1100 image (100dpi), upper left and lower right, both inclusive, for radio buttons is a box that encloses all of them
-// if the ending x or ending y starts with a "+", it is relative to the starting x or y
-// if the ending x or ending y is a 0, the code uses a default width or height
-
-// Next fields are only for radio buttons, they are in groups of 5, one for each radio button
-// First is the string that will be sent as the value for this button choice
-// Then 4 numbers for the location on screen, same details as for the main location
-
 MsgNo,str,Y,P1,446,49,94,25
 1a.,dstr,Y,P1,65,160,88,27
 1b.,tstr,Y,P1,196,159,64,27
@@ -45,9 +30,26 @@ FmTel,pstr,,P1,469,381,319,27
 *10.,str,Y,P1,157,415,633,27
 11.,str,,P1,357,449,430,28
 12.,mstr,Y,P1,52,505,756,173
+OpRelayRcvd,str,,P1,177,824,244,18
+OpRelaySent,str,,P1,527,824,242,18
 OpCall,str,,P1,583,850,222,26
 OpName,str,,P1,564,885,235,21
 Method,rb,,P1,47,882,376,82,Telephone,58,893,0,0,EOC Radio,58,924,0,0,Amateur Radio,58,948,0,0,Dispatch Center,196,893,0,0,FAX,196,924,0,0,Other,196,948,0,0,Courier,302,924,0,0
-Other,str,Method=Other,P1,258,936,144,0
+Other,str,Method=Other,P1,258,936,144,20
 OpDate,str,,P1,489,936,83,27
 OpTime,str,,P1,689,936,62,27
+// there must be one and only one line that starts with a "*"
+// that entry will be become a part of the standard subject line
+// FieldId as it appears in outgoing message (followed by a ": ")
+// FieldName, does not appear anywhere, currently if it contains "Date" or "Time" triggers a validity check (or it will soon)
+// Type, can be "str" for string, "mstr" for multiline string, "rb" for a set of radio buttons, "cb" for a checkbox
+// RequireFlag, must be Y or N or blank (same as N)
+// ValidityCheck, if blank it just means "any entry", otherewise is a function name
+// 4 numbers for the location on screen, assumes 850x1100 image (100dpi), upper left and lower right, both inclusive, for radio buttons is a box that encloses all of them
+// if the ending x or ending y starts with a "+", it is relative to the starting x or y
+// if the ending x or ending y is a 0, the code uses a default width or height
+
+// Next fields are only for radio buttons, they are in groups of 5, one for each radio button
+// First is the string that will be sent as the value for this button choice
+// Then 4 numbers for the location on screen, same details as for the main location
+

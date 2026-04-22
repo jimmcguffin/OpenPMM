@@ -69,6 +69,8 @@ MsgNo,str,,P1,315,86,155,22
 77b.,nstr,77.,P1,252,892,70,18
 77c.,nstr,77.,P1,468,892,70,18
 77d.,nstr,77.,P1,682,892,70,18
+OpRelayRcvd,str,,P1,177,950,244,19
+OpRelaySent,str,,P1,527,950,242,19
 OpName,str,,P1,102,977,160,18
 OpCall,str,,P1,336,977,70,18
 OpDate,dstr,,P1,464,977,70,18

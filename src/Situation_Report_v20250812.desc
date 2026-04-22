@@ -24,8 +24,8 @@ MsgNo,str,Y,P1,307,85,115,23
 8c,str,,P1,494,272,288,27
 7d.,str,,P1,180,308,210,27
 8d.,str,,P1,517,308,265,27
-20d.,dstr,,P1,157,369,252,20
-20t.,tstr,,P1,519,369,264,20
+20d.,dstr,Y,P1,157,369,252,20
+20t.,tstr,Y,P1,519,369,264,20
 *21.,dd,Y,P1,137,394,270,20,Campbell,Cupertino,Gilroy,Los Altos,Los Altos Hills,Los Gatos,Milpitas,Monte Sereno,Morgan Hill,Mountain View,Palo Alto,San Jose,Santa Clara (City),Saratoga,Sunnyvale,Santa Clara County,County unincorporated
 22.,str,Y,P1,521,394,261,20
 23.,rb,,P1,228,418,422,20,Unknown,267,427,0,0,Yes,418,428,0,0,No,567,428,0,0
@@ -76,11 +76,11 @@ MsgNo,str,Y,P1,307,85,115,23
 84b.,mstr,,P3,306,93,477,34
 85a.,rb,,P3,282,131,400,19,Normal,299,140,0,0,Problem,395,140,0,0,Failure,494,140,0,0,Unknown,585,140,0,0
 85c.,mstr,,P3,306,153,477,34
-90.,rb,,P3,198,227,471,22,Stable,218,238,0,0,Stablizing,306,238,0,0,Unstable,421,237,0,0,Unknown,529,238,0,0
-91.,mstr,,P3,161,251,620,127
-92.,mstr,,P3,161,387,620,142
+90.,rb,Y,P3,198,227,471,22,Stable,218,238,0,0,Stablizing,306,238,0,0,Unstable,421,237,0,0,Unknown,529,238,0,0
+91.,mstr,Y,P3,161,251,620,127
+92.,mstr,Y,P3,161,387,620,142
 OpRelayRcvd,str,,P3,148,579,294,18
-OpRelaySent1,str,,P3,488,579,292,18
+OpRelaySent,str,,P3,488,579,292,18
 OpName,str,,P3,107,608,245,16
 OpCall,str,,P3,413,608,95,16
 OpDate,str,,P3,552,608,103,16

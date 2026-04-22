@@ -337,6 +337,8 @@ class FormItemCheckBox(FormItem):
         return "checked" if self.widget.isChecked() else ""
 
     def set_value(self,value):
+        if value == "checked":
+            value = True
         return self.widget.setChecked(value)
 
 

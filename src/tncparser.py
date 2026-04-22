@@ -26,7 +26,7 @@ class TncDevice(QObject):
         self.sendimmediate = []
         self.monitor_mode = False
 
-    def start_session(self,ss:SerialStream,mailbox,srflags:int,sendimmediate:[int]=None):
+    def start_session(self,ss:SerialStream,mailbox,srflags:int,sendimmediate:list[int]=None):
         self.monitor_mode = False
         self.serialStream = ss
         self.mailbox = mailbox
@@ -82,7 +82,7 @@ class TAPR_Device(TncDevice):
         self.special_disconnect_value = "*** Disconnect\r" # tells the session to end
         self.in_passthru_mode = False
 
-    def start_session(self,ss,mailbox,srflags:int,sendimmediate:[int]=None):
+    def start_session(self,ss,mailbox,srflags:int,sendimmediate:list[int]=None):
         super().start_session(ss,mailbox,srflags,sendimmediate)
         self.message_queue.clear()
         self.signal_line_read_handle = global_signals.signal_line_read.connect(self.onResponse)        
@@ -169,7 +169,7 @@ class TAPR_Device(TncDevice):
         if not self.message_queue: return
         # # handle confused responses first
         # if "\r\nEH?" in r:
-        #     print("TNC: EH resposne, resending")
+        #     print("TNC: EH response, resending")
         #     self.serialStream.write(self.message_queue[0]) # resend the last command?
         #     return
         if self.is_valid_query_response(self.message_queue[0],r):
@@ -294,7 +294,7 @@ class KISS_Device(TncDevice):
         self.vr = 0 # Receive State variable
         self.nr = 0 # Receive Sequence Number
         # some more variable names from the spec
-        self.t1 = 3000 # acknowledgement time
+        self.t1 = 4000 # acknowledgement time
         self.t2 = 1000 # response delay time, is milliseconds to wait for consecutive packets
         self.t3 = 10000 # inactive link time
         self.n1 = 128 # maximum bytes in a I packet, aka PACLEN
@@ -317,7 +317,7 @@ class KISS_Device(TncDevice):
         self.t3_timer.timeout.connect(self.on_t3_timeout)
         self.signal_frame_read_handle = None
 
-    def start_session(self,ss,mailbox,srflags:int,sendimmediate:[int]=None):
+    def start_session(self,ss,mailbox,srflags:int,sendimmediate:list[int]=None):
         super().start_session(ss,mailbox,srflags,sendimmediate)
         self.mycall = self.pd.getActiveCallSign().upper()
         self.bbs = self.pd.getBBS("ConnectName").upper()
@@ -371,10 +371,10 @@ class KISS_Device(TncDevice):
                 ### maybe end_session?
             else:
                 self.retries += 1
-                #self.resend_all_pending()
+                self.resend_all_pending()
     def on_t2_timeout(self):
-        print(f"Timer 2 triggered at {datetime.now().strftime("%H:%M:%S.%f")}, l={self.last_ack_sent} r={self.nr}")
-        if self.last_ack_sent != self.nr:
+        print(f"Timer 2 triggered at {datetime.now().strftime("%H:%M:%S.%f")}, l={self.last_ack_sent} r={self.vr}/{self.nr}")
+        if self.last_ack_sent != self.vr:
             self.send_frame(ax25.FrameType.RR)
 
     def on_t3_timeout(self):
@@ -382,7 +382,7 @@ class KISS_Device(TncDevice):
 
     def resend_all_pending(self):
         for seq,tmp in self.stuff_waiting_to_be_acknowleged:
-            self.send_frame(ax25.FrameType.I,True,False,tmp)
+            self.send_frame(ax25.FrameType.I,True,False,tmp.decode())
     
     def on_message(self,msg:bytes):
         if self.monitor_mode:
@@ -394,8 +394,10 @@ class KISS_Device(TncDevice):
         control = frame.control
         ft = control.frame_type
         if ft.is_I() and control.send_seqno != self.vr:
+            print(f"sent seq {control.send_seqno}, was expecting {self.vr}")
             self.send_frame(ax25.FrameType.REJ)
             return # spec says to discard these
+
         # if this is a type I or a type RR, it will have an acknowledge number in it
         # if this is a type "I", pass to upper layers
         # this code is similar to the code in LineDelimitedSerialStream and should be shared somehow
@@ -408,6 +410,10 @@ class KISS_Device(TncDevice):
             while self.stuff_waiting_to_be_acknowleged and self.stuff_waiting_to_be_acknowleged[0][0] != control.recv_seqno:
                 print(f"ack {control.recv_seqno}, removing {self.stuff_waiting_to_be_acknowleged[0][0]}")
                 self.stuff_waiting_to_be_acknowleged.popleft()
+            # send any pending stuff if in window
+            while self.stuff_to_write and len(self.stuff_waiting_to_be_acknowleged) < self.k:
+                tmp = self.stuff_to_write.popleft()
+                self.send_frame(ax25.FrameType.I,True,False,tmp)
             # if we are caught up, turn off T1
             if control.recv_seqno == self.vs:
                 self.t1_timer.stop()
@@ -426,12 +432,13 @@ class KISS_Device(TncDevice):
             self._sdata += frame.data
             self.find_lines()
         elif ft == ax25.FrameType.UA:
-            # we are connected!
             self.t1_timer.stop()
-            self.vs = 0
-            self.vr = 0
-            self.state = STATE_CONNECTED
-            self.onConnected()
+            if self.state == STATE_CONNECTING:
+                # we are connected!
+                self.vs = 0
+                self.vr = 0
+                self.state = STATE_CONNECTED
+                self.onConnected()
         elif ft == ax25.FrameType.DISC:
             # we are disconnected
             # acknowledge it
@@ -488,6 +495,7 @@ class KISS_Device(TncDevice):
         while self.stuff_to_write and len(self.stuff_waiting_to_be_acknowleged) < self.k:
             tmp = self.stuff_to_write.popleft()
             self.send_frame(ax25.FrameType.I,True,False,tmp)
+            # !!! here is the problem, if stuff_waiting_to_be_acknowleged >= self.k, it never gets sent
 
     def send_frame(self,ft:ax25.FrameType,cr:bool=False,pf:bool=False,s:str=None):
         dst = ax25.Address(self.bbs)

@@ -21,12 +21,15 @@ from enum import Enum
 from operator import attrgetter
 import re
 import sys
+import time
 from urllib.parse import quote_plus,unquote_plus
 
-from PySide6.QtCore import Qt,QIODeviceBase, qDebug
+from PySide6.QtCore import Qt,QIODeviceBase,QTimer,qDebug
 from PySide6.QtGui import QAction, QPalette, QColor
 from PySide6.QtSerialPort import QSerialPortInfo, QSerialPort
 from PySide6.QtWidgets import QMainWindow, QInputDialog, QMessageBox, QApplication, QStyleFactory, QLabel, QFrame, QStatusBar, QTableWidgetItem, QFileDialog, QMessageBox, QMenu
+from fpdf import FPDF
+
 
 import aboutdialog
 import bbsdialog
@@ -114,6 +117,8 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         self.actionReset_all_to_SCC_standard.triggered.connect(self.resetAllToSccStandard)
         self.actionAbout_OpenPMM.triggered.connect(self.on_about)
         self.actionMonitor.triggered.connect(self.on_monitor)
+        self.actionKISS_On.triggered.connect(lambda: self.set_kiss_mode(True))
+        self.actionKISS_Off.triggered.connect(lambda: self.set_kiss_mode(False))
         self.cNew.clicked.connect(self.on_new_message)
         #self.cOpen.clicked.connect(self.on_new_message)
         self.cArchive.clicked.connect(self.on_archive_messages)
@@ -400,6 +405,36 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         tmp.show()
         tmp.raise_()
 
+    def set_kiss_mode(self,mode:bool):
+        # if a cycle was in progress, cancel it
+        if self.tnc_parser:
+            self.on_end_send_receive()
+        port = self.settings.getInterface("ComPort")
+        if not port:
+            QMessageBox.critical(self,"Error",f"Error serial port has not been configuired, go to Setup/Interface")
+            return
+        # port = port.partition('/')[0].rstrip()
+
+        f = self.open_serial_port()
+        if not f:
+            QMessageBox.critical(self,"Error",f"Error {self.serialport.errorString()} opening serial port")
+            return
+        if mode:
+            self.serialport.write(b"INTFACE KISS\r")
+            self.serialport.write(b"RESET\r")
+            QTimer.singleShot(1000,self._tmp1)
+        else:
+            self.serialport.write(b"\xc0\xff\xc0")
+            self.serialport.flush()
+            QTimer.singleShot(2000,self._tmp1)
+            #self.serialport.close()
+            #QMessageBox.information(self,"Done","Done")
+
+    def _tmp1(self):
+        r = self.serialport.readAll()
+        self.serialport.close()
+        QMessageBox.information(self,"Done","Done")
+
     def on_new_message(self):
         tmp = newpacketmessage.NewPacketMessage(self.settings,self)
         tmp.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
@@ -506,6 +541,8 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         self.on_read_message(self,row,0)
 
     def open_serial_port(self):
+        if self.settings.getInterface("ConnectionType") == "Network":
+            return True
         # get all relevant settings - remember that at this point they are all strings
         port = self.settings.getInterface("ComPort")
         if not port:
@@ -551,7 +588,7 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             self.serialport.setRequestToSend(True)
         return True
     
-    def on_send_receive(self,send:bool,recv:bool,sendimmediate:[int]=None):
+    def on_send_receive(self,send:bool,recv:bool,sendimmediate:list[int]=None):
         # if a cycle was in progress, cancel it
         if self.tnc_parser:
             self.on_end_send_receive()
@@ -926,15 +963,15 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         self.settings.addInterface("XSC_Kantronics_KPC3-Plus","KPC3+ TNC for use with Santa Clara County's BBS System. Verify the COM port setting for your system.")
         self.settings.addInterface("Generic KISS Device","Verify the COM port setting for your system. Network interfacing is not yet supported.")
         self.settings.setActiveInterface(self.settings.getInterfaces()[0])
-        for p in KantronicsKPC3Plus.get_default_prompts():
+        for p in TAPR_Device.get_default_prompts():
             self.settings.setInterface(p[0],p[1])
         self.settings.setInterface("AlwaysSendInitCommands",True)
         self.settings.setInterface("IncludeCommandPrefix",False)
-        for dc in KantronicsKPC3Plus.get_default_commands().items():
+        for dc in TAPR_Device.get_default_commands().items():
             self.settings.setInterface(dc[0],dc[1])
         self.settings.setInterface("CommandPrefix","")
-        self.settings.setInterface("CommandsBefore",KantronicsKPC3Plus.get_default_before_init_commands())
-        self.settings.setInterface("CommandsAfter",KantronicsKPC3Plus.get_default_after_init_commands())
+        self.settings.setInterface("CommandsBefore",TAPR_Device.get_default_before_init_commands())
+        self.settings.setInterface("CommandsAfter",TAPR_Device.get_default_after_init_commands())
         self.settings.setInterface("Baud","9600")
         self.settings.setInterface("Parity","None")
         self.settings.setInterface("DataBits","8")
@@ -978,6 +1015,214 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         else:
             QMessageBox.information(self,"Search","No messages found")
 
+class f309(FPDF):
+    def __init__(self,
+            incidentname:str="Xanadu Spring Ultra Marathon Mar 26",
+            activation:str="XND-26-03181P",
+            position:str="Milepost 25",
+            tac_callsign:str="XND025",
+            opname:str="Jim McGuffin",
+            callsign:str="KW6W"):
+        super().__init__("portrait","pt","Letter")
+        self.vlines = [35,90,148,211,269,337,463,575] # these are X values
+        self.hlines = [36,80,113,129,146,163,650,699] # these are Y values
+        self.vhlines = [134,310,341,448] # these are some extra X values for the header area
+        self.data = []
+        self.ndata_lines = 31
+        self.spacing = (self.hlines[6]-self.hlines[5])/self.ndata_lines
+        self.incidentname = incidentname
+        self.activation = activation
+        self.position = position
+        self.tac_callsign = tac_callsign
+        self.opname = opname
+        self.callsign = callsign
+
+    def add_data(self,s:list[str]):
+        assert(len(s) == 8)
+        self.data.append(s)
+
+    def done(self):
+        # resolve any LMI data
+        for i in range(len(self.data)):
+            if len(self.data[i]) == 8 and self.data[i][6] and self.data[i][7].startswith("DELIVERED: "):
+                os = self.data[i][7][11:]
+                for j in range(i):
+                    if self.data[j][7] == os:
+                        self.data[j][5] = self.data[i][6]
+        np = (len(self.data)+self.ndata_lines-1)//(self.ndata_lines)
+        if np <= 0:
+            return
+        for page in range(np):
+            self.generate_blank_page(page+1,np)
+            self.set_font("Arial",size=8)
+            for i in range(self.ndata_lines):
+                if page*self.ndata_lines+i >= len(self.data):
+                    break
+                v = self.data[page*self.ndata_lines+i]
+                # only show the time part of the date/time
+                self.set_xy(self.vlines[0],self.dline(i)+4)
+                self.clipped_cell(self.vlines[1]-self.vlines[0],10,txt=f309.reformat_date_noyear(v[1]),align='L')
+                #self.clipped_cell(self.vlines[1]-self.vlines[0],10,txt=v[1][11:16],align='L')
+                # only show the from/to up to the "@"
+                self.set_xy(self.vlines[1],self.dline(i)+4)
+                self.clipped_cell(self.vlines[2]-self.vlines[1],10,txt=v[2].split("@")[0].upper(),align='L')
+                self.set_xy(self.vlines[2],self.dline(i)+4)
+                self.clipped_cell(self.vlines[3]-self.vlines[2],10,txt=v[3].upper(),align='L')
+                self.set_xy(self.vlines[3],self.dline(i)+4)
+                self.clipped_cell(self.vlines[4]-self.vlines[3],10,txt=v[4].split("@")[0].upper(),align='L')
+                self.set_xy(self.vlines[4],self.dline(i)+4)
+                self.clipped_cell(self.vlines[5]-self.vlines[4],10,txt=v[5].upper(),align='L')
+                self.set_xy(self.vlines[5],self.dline(i)+4)
+                self.clipped_cell(self.vlines[7]-self.vlines[5],10,txt=v[7],align='L')
+
+        # Save the PDF
+        self.output("hello_fpdf.pdf")
+        print("FPDF file created!")
+
+    @staticmethod
+    def reformat_date(date:str) -> str:
+        return f"{date[5:7]}/{date[8:10]}/{date[0:4]} {date[11:16]}" if date else "MM/DD/YYYY HH:MM"
+
+    @staticmethod
+    def reformat_date_noyear(date:str) -> str:
+        return f"{date[5:7]}/{date[8:10]} {date[11:16]}" if date else "MM/DD HH:MM"
+
+    def generate_blank_page(self,page:int,npages:int): # not quite blank, has headers and footers
+        self.add_page()
+        # find the date range
+        date0 = ""
+        date1 = ""
+        for d in self.data:
+            if len(d) >= 8: # if it is a normal entry
+                if not date0 or d[1] < date0:
+                    date0 = d[1]
+                if not date1 or d[1] > date1:
+                    date1 = d[1]
+        # reformat dates to make usual American
+        date0 = f309.reformat_date(date0)   
+        date1 = f309.reformat_date(date1)   
+        # first, all the lines
+        # drawing the thinner gray lines first looks better
+        self.set_line_width(1)
+        self.set_draw_color(128)
+        for row in range(1,self.ndata_lines):
+            self.hline(self.vlines[0],self.dline(row),self.vlines[-1])
+        self.set_draw_color(0)
+        # the 2X thick lines
+        self.set_line_width(2)
+        self.vline(self.vlines[0],self.hlines[0],self.hlines[-1]) # left edge
+        self.vline(self.vlines[1],self.hlines[3]+1,self.hlines[-2]) # columns
+        self.vline(self.vlines[3],self.hlines[3]+1,self.hlines[-1])
+        self.vline(self.vlines[5],self.hlines[3]+1,self.hlines[-1])
+        self.vline(self.vlines[6],self.hlines[6],self.hlines[-1]) # little stub at botton
+        self.vline(self.vlines[7],self.hlines[0],self.hlines[-1]) # right edge
+        self.hline(self.vlines[0],self.hlines[0],self.vlines[-1]) # top
+        self.hline(self.vlines[1],self.hlines[4],self.vlines[5])
+        self.hline(self.vlines[0],self.hlines[5],self.vlines[-1])
+        self.hline(self.vlines[0],self.hlines[6],self.vlines[-1]) # bottom1
+        self.hline(self.vlines[0],self.hlines[7],self.vlines[-1]) # bottom2
+        # then 1X lines
+        self.set_line_width(1)
+        self.hline(self.vlines[0],self.hlines[1],self.vlines[-1])
+        self.hline(self.vlines[0],self.hlines[2],self.vlines[-1])
+        self.hline(self.vlines[0],self.hlines[3],self.vlines[-1])
+        # some extra lines in the header
+        self.vline(self.vhlines[0],self.hlines[0],self.hlines[1])
+        self.vline(self.vhlines[1],self.hlines[1],self.hlines[2])
+        self.vline(self.vhlines[2],self.hlines[0],self.hlines[1])
+        # then dotted lines
+        self.set_line_width(0.5)
+        self.dashed_line(self.vlines[2],self.hlines[4],self.vlines[2],self.hlines[6],2,2)
+        self.dashed_line(self.vlines[4],self.hlines[4],self.vlines[4],self.hlines[6],2,2)
+
+        # now the text, ordered by size
+        # first 14 point stuff
+        self.set_font("Arial",style="B",size=14)  # Set font
+        self.set_xy(self.vlines[0],self.hlines[0]+2)
+        self.cell(self.vhlines[0]-self.vlines[0],14,txt="COMM Log",align='C')
+        # ten 10 point stuff
+        self.set_font("Arial",style="B",size=10)
+        self.set_xy(self.vlines[0],self.hlines[0]+18)
+        self.cell(self.vhlines[0]-self.vlines[0],10,txt="ICS 309-SCCo",align='C')
+        self.set_xy(self.vlines[0],self.hlines[0]+30)
+        self.cell(self.vhlines[0]-self.vlines[0],10,txt="ARES/RACES",align='C')
+        self.set_xy(self.vlines[0],self.hlines[2]+2)
+        self.cell(self.vlines[-1]-self.vhlines[0],12,txt="5.",align='L')
+        self.set_xy(self.vlines[3],self.hlines[2]+2)
+        self.cell(self.vlines[5]-self.vlines[3],12,txt="COMMUNICATIONS LOG",align='C')
+        self.set_xy(self.vlines[1],self.hlines[3]+2)
+        self.cell(self.vlines[3]-self.vlines[1],12,txt="FROM",align='C')
+        self.set_xy(self.vlines[3],self.hlines[3]+2)
+        self.cell(self.vlines[5]-self.vlines[3],12,txt="TO",align='C')
+        self.set_xy(self.vlines[6],self.hlines[6]+18)
+        self.cell(self.vlines[7]-self.vlines[6],10,txt=f"{page} of {npages}",align='C')
+        # the header fields
+        self.set_xy(self.vhlines[0]+2,self.hlines[0]+18)
+        self.cell(self.vhlines[2]-self.vhlines[0],10,txt=self.incidentname,align='L')
+        self.set_xy(self.vhlines[0]+2,self.hlines[0]+30)
+        self.cell(self.vhlines[2]-self.vhlines[0],10,txt=self.activation,align='L')
+        self.set_xy(self.vhlines[2]+2,self.hlines[0]+30)
+        self.cell(self.vlines[-1]-self.vhlines[2],10,txt=f"From: {date0}   To: {date1}",align='L')
+        
+        self.set_xy(self.vlines[0]+2,self.hlines[1]+18)
+        self.cell(self.vhlines[1]-self.vlines[0],10,txt=f"{self.position} / {self.tac_callsign}",align='L')
+        self.set_xy(self.vhlines[1]+2,self.hlines[1]+18)
+        self.cell(self.vlines[-1]-self.vhlines[2],10,txt=f"{self.opname} / {self.callsign}",align='L')
+
+        # then 8 point stuff
+        self.set_font("Arial",style="B",size=8)
+        self.set_xy(self.vhlines[0],self.hlines[0]+2)
+        self.cell(self.vhlines[2]-self.vhlines[0],10,txt="1. Incident Name and Activation Number",align='L')
+        self.set_xy(self.vhlines[2],self.hlines[0]+2)
+        self.cell(self.vlines[-1]-self.vhlines[2],10,txt="2. Operational Period (Date/Time)",align='L')
+        self.set_xy(self.vlines[0],self.hlines[1]+2)
+        self.cell(self.vhlines[1]-self.vlines[0],10,txt="3. Radio Net Name (for NCOs) or Position/Tactical Call",align='L')
+        self.set_xy(self.vhlines[1],self.hlines[1]+2)
+        self.cell(self.vlines[-1]-self.vhlines[1],10,txt="4. Radio Operator (Name/Call Sign)",align='L')
+        self.set_xy(self.vlines[0],self.hlines[3]+6)
+        self.multi_cell(self.vlines[1]-self.vlines[0],10,txt="Time\n(24:00)",align='C')
+        self.set_xy(self.vlines[1],self.hlines[4]+4)
+        self.cell(self.vlines[2]-self.vlines[1],10,txt="Call Sign/ID",align='C')
+        self.set_xy(self.vlines[2],self.hlines[4]+4)
+        self.cell(self.vlines[3]-self.vlines[2],10,txt="Msg #",align='C')
+        self.set_xy(self.vlines[3],self.hlines[4]+4)
+        self.cell(self.vlines[4]-self.vlines[3],10,txt="Call Sign/ID",align='C')
+        self.set_xy(self.vlines[4],self.hlines[4]+4)
+        self.cell(self.vlines[5]-self.vlines[4],10,txt="Msg #",align='C')
+        self.set_xy(self.vlines[5],self.hlines[3]+12)
+        self.cell(self.vlines[-1]-self.vlines[5],10,txt="Message",align='L')
+        self.set_xy(self.vlines[0],self.hlines[6]+2)
+        self.cell(self.vlines[3]-self.vlines[0],10,txt="6. Prepared By (Name, Call Sign)",align='L')
+        self.set_xy(self.vlines[3],self.hlines[6]+2)
+        self.cell(self.vlines[4]-self.vlines[3],10,txt="6A. Signature",align='L')
+        self.set_xy(self.vlines[5],self.hlines[6]+2)
+        self.cell(self.vlines[6]-self.vlines[5],10,txt="7. Date & Time Prepared",align='L')
+        self.set_xy(self.vlines[6],self.hlines[6]+2)
+        self.cell(self.vlines[7]-self.vlines[6],10,txt="8. Page",align='L')
+
+    def clipped_cell(self, w,h=0,txt='',border=0,ln=0,align='',fill=0,link=''):
+        margin = 4
+        if self.get_string_width(txt)+margin < w:
+            self.cell(w,h,txt,border,ln,align,fill,link)
+        else:
+            e = "..."
+            ew = self.get_string_width(e)
+            while txt and self.get_string_width(txt)+ew+margin >= w:
+                txt = txt[:-1]
+            self.cell(w,h,txt+e,border,ln,align,fill,link)
+
+
+# Create PDF        pass
+    def dline(self,row:int):
+        return self.hlines[5]+row*self.spacing
+
+    def hline(self,x0,y,x1):
+        self.line(x0,y,x1,y)
+
+    def vline(self,x,y0,y1):
+        self.line(x,y0,x,y1)
+
+
 if __name__ == "__main__": 
     app = QApplication(sys.argv)
     app.setStyle(QStyleFactory.create("Fusion"))
@@ -1007,6 +1252,21 @@ if __name__ == "__main__":
     #     p.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
     #     p.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.white)
     #     app.setPalette(p)
+
+
+    # Create a PDF object
+    # this is must some work in progress
+    # pdf = f309()
+    # try:
+    #     with open("test.log","rt",encoding="windows-1252") as file:
+    #         for line in file.readlines():
+    #             line = line.rstrip()
+    #             f = line.split(",",7)
+    #             pdf.add_data(f)
+    # except FileNotFoundError:
+    #     pass
+    # pdf.done()
+
 
     mainwindow = MainWindow()
     mainwindow.show()

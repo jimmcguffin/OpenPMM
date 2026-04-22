@@ -19,6 +19,8 @@ from globalsignals import global_signals
 # any of these steps can be skipped via various settings
 
 
+debug_sequence = False
+
 # there is a list of these in the parser
 # first, the "what_to_send" (if any) is sent over the serial port
 # then, when the response comes back, the handler is called with the reponse
@@ -100,25 +102,25 @@ class BbsParser(QObject):
         print()
 
     def add_step(self,step): # argument is a BbsSequenceStep, a BbsSequenceStepNoResponse, or a BbsSequenceSync
-        #self.dump_sequence("as-before:")
+        if debug_sequence: self.dump_sequence("as-before:")
         assert(isinstance(step,(BbsSequenceStep,BbsSequenceStepNoResponse,BbsSequenceSync)))
         self.bbs_sequence.append(step) # just add it to the end
-        #self.dump_sequence("as-after:")
+        if debug_sequence: self.dump_sequence("as-after:")
         # now check the front (which might be the thing we just pushed)
         self.check_sequence()
 
     # adds to the front of the list, this happens when new steps are needed in response to commands, eg when we get a "la", when then insert the read commands
     def push_step(self,step): # argument is a BbsSequenceStep, a BbsSequenceStepNoResponse, or a BbsSequenceSync
-        #self.dump_sequence("ps-before:")
+        if debug_sequence: self.dump_sequence("ps-before:")
         assert(isinstance(step,(BbsSequenceStep,BbsSequenceStepNoResponse,BbsSequenceSync)))
         self.bbs_sequence.insert(0,step)
-        #self.dump_sequence("ps-after:")
+        if debug_sequence: self.dump_sequence("ps-after:")
         # now check the front (which might be the thing we just pushed)
         self.check_sequence()
 
     # call this when items have been add or removed or when bbs_pending has been changed
     def check_sequence(self):
-        #self.dump_sequence("cs-before:")
+        if debug_sequence: self.dump_sequence("cs-before:")
         while self.bbs_sequence:
             step = self.bbs_sequence[0]
             if isinstance(step,BbsSequenceStep):
@@ -132,7 +134,7 @@ class BbsParser(QObject):
                     self.tnc_device.send(step.what_to_send)
             elif isinstance(step,BbsSequenceSync):
                 if self.bbs_pending:
-                    #self.dump_sequence("cs-after:")
+                    if debug_sequence: self.dump_sequence("cs-after:")
                     return # will get stuck here until all pendings are handled
                 self.bbs_sequence.popleft()
                 if step.handler: # I think this will always be true
@@ -234,22 +236,22 @@ class Jnos2Parser(BbsParser):
         # sample "la\r\nMail area: kw6w\r\n1 message  -  1 new\r\n\St.  #  TO            FROM     DATE   SIZE SUBJECT\r\n> N   1 kw6w@w1xsc.sc pkttue   Oct 15  747 DELIVERED: W6W-303P_P_ICS213_Shutti\r\nArea: kw6w Current msg# 1.\r\n" +terminator
         # or "la\r\nMail area: xscperm\r\n4 messages  -  4 new\r\nSt.  #  TO            FROM     DATE   SIZE SUBJECT\r\n> N   1 xscperm       xsceoc   Nov 27 5962 SCCo XSC Tactical Calls v191127    \r\n  N   2 xscperm       xsceoc   Sep  5 1932 SCCo Packet Frequencies v200905    \r\n  N   3 xscperm       xsceoc   Aug 13 2768 SCCo Packet Subject Line v220803   \r\n  N   4 xscperm       xsceoc   Aug  9 4326 SCCo Packet Tactical Calls v2024080\r\nArea: xscperm Current msg# 1.\r\n?,A,B,C,CONV,D,E,F,H,I,IH,IP,J,K,L,M,N,NR,O,P,PI,R,S,T,U,V,W,X,Z " >>
         lines = r.splitlines()
-        if len(lines) >= 2:
-            #asume no echo
-            area_line = 0
-            message_counts_line = 1
-            first_message_line = 4
-            if self.using_echo:
-                area_line += 1
-                message_counts_line += 1
-                first_message_line += 1
-            words = lines[area_line].split()
-            if len(words) >= 2 and words[0] == "Area:":
-                self.current_area = words[1].upper()
-            elif len(words) >= 3 and words[0] == "Mail" and words[1] == "area:":
-                self.current_area = words[2].upper()
-            # line 2 is blank, 3 has the column headers
-            for l in lines[first_message_line:]:
+        if self.using_echo:
+            lines = lines[1:] # skip echo
+        in_message_portion = False
+        for l in lines:
+            if not in_message_portion:
+                words = l.split()
+                if len(words) >= 2 and words[0] == "Area:":
+                    self.current_area = words[1].upper()
+                elif len(words) >= 3 and words[0] == "Mail" and words[1] == "area:":
+                    self.current_area = words[2].upper()
+                elif words[0] == "St.": # perhaps allow other ways to determine this
+                    in_message_portion = True
+            else:
+                # we are in message portion
+                if l.startswith("Area:"):
+                    continue
                 # the first char might be a ">" which indicates the current message, we dont care about that, and then a space
                 words = l[2:].split(None,7) # the date will span multiple words
                 # word[0] is the message number
@@ -274,6 +276,47 @@ class Jnos2Parser(BbsParser):
                     tmp = f"{self.get_command("CommandRead")} {mn}\r"
                     self.push_step(BbsSequenceStep(tmp,self.handle_read,mn))
                     self.push_step(BbsSequenceSync()) # wait until done
+
+        # if len(lines) >= 2:
+        #     #asume no echo
+        #     area_line = 0
+        #     message_counts_line = 1
+        #     first_message_line = 4
+        #     if self.using_echo:
+        #         area_line += 1
+        #         message_counts_line += 1
+        #         first_message_line += 1
+        #     words = lines[area_line].split()
+        #     if len(words) >= 2 and words[0] == "Area:":
+        #         self.current_area = words[1].upper()
+        #     elif len(words) >= 3 and words[0] == "Mail" and words[1] == "area:":
+        #         self.current_area = words[2].upper()
+        #     # line 2 is blank, 3 has the column headers
+        #     for l in lines[first_message_line:]:
+        #         # the first char might be a ">" which indicates the current message, we dont care about that, and then a space
+        #         words = l[2:].split(None,7) # the date will span multiple words
+        #         # word[0] is the message number
+        #         # word[1] is the to_addr
+        #         # word[2] is the from_adddr
+        #         # word[3] is the month
+        #         # word[4] is the day
+        #         # word[5] is the size
+        #         # everything after this is the subject
+        #         if len(words) >= 2 and words[0] in ("Y","N") and words[1].isdigit():
+        #             # todo: we might consider checking if we already have this message, but it might be hard when there is
+        #             # only a partial subject and weird date formats, so for now read (and later kill) all of them
+        #             # matching works ok for bulletins but not so good for the regular mail area
+        #             callsign = self.pd.getActiveCallSign(False).upper()
+        #             if self.current_area != callsign:
+        #                 if len(words) >= 8:
+        #                     maybematch = self.mailbox.is_possibly_a_duplicate(words[2],words[3],words[7].rstrip())
+        #                     print(f"matcher says {maybematch},{words[7].rstrip()}")
+        #                     if maybematch:
+        #                         continue
+        #             mn = int(words[1])
+        #             tmp = f"{self.get_command("CommandRead")} {mn}\r"
+        #             self.push_step(BbsSequenceStep(tmp,self.handle_read,mn))
+        #             self.push_step(BbsSequenceSync()) # wait until done
 
     def kill_read_messages(self,_=None):
         # only kill read messages on own area

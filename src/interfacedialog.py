@@ -116,8 +116,8 @@ class InterfaceDialog(QDialog,Ui_InterfaceDialogClass):
         self.pd.setInterface("AlwaysSendInitCommands",self.cAlwaysSendInitCommands.isChecked())
         cb = self.cCommandsBefore.toPlainText()
         ca = self.cCommandsAfter.toPlainText()
-        self.pd.setBBS("CommandsBefore",cb.splitlines())
-        self.pd.setBBS("CommandsAfter",ca.splitlines())
+        self.pd.setInterface("CommandsBefore",cb.splitlines())
+        self.pd.setInterface("CommandsAfter",ca.splitlines())
 
         self.need_save = False
     
