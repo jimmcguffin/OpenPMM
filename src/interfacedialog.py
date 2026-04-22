@@ -51,11 +51,14 @@ class InterfaceDialog(QDialog,Ui_InterfaceDialogClass):
         self.cFlowControl.setCurrentText(self.pd.getInterface("FlowControl"))
         self.need_save = True
         # page 3
+        self.cNetworkIpAddreess.setText(self.pd.getInterface("NetworkIpAddress"))
+        self.cNetworkPort.setText(self.pd.getInterface("NetworkPort"))
+        # page 4
         self.cPromptCommand.setText(self.pd.getInterface("PromptCommand"))
         self.cPromptTimeout.setText(self.pd.getInterface("PromptTimeout"))
         self.cPromptConnected.setText(self.pd.getInterface("PromptConnected"))
         self.cPromptDisconnected.setText(self.pd.getInterface("PromptDisconnected"))
-        # page 4
+        # page 5
         self.cCommandMyCall.setText(self.pd.getInterface("CommandMyCall"))
         self.cCommandConnect.setText(self.pd.getInterface("CommandConnect"))
         self.cCommandRetry.setText(self.pd.getInterface("CommandRetry"))
@@ -63,7 +66,7 @@ class InterfaceDialog(QDialog,Ui_InterfaceDialogClass):
         self.cCommandDayTime.setText(self.pd.getInterface("CommandDayTime"))
         self.cIncludeCommandPrefix.setChecked(self.pd.getInterfaceBool("IncludeCommandPrefix"))
         self.cCommandPrefix.setText(self.pd.getInterface("CommandPrefix"))
-        # page 5
+        # page 6
         self.cAlwaysSendInitCommands.setChecked(self.pd.getInterfaceBool("AlwaysSendInitCommands"))
         sl1 = self.pd.getInterface("CommandsBefore")
         sl2 = self.pd.getInterface("CommandsAfter")
@@ -100,11 +103,14 @@ class InterfaceDialog(QDialog,Ui_InterfaceDialogClass):
         self.pd.setInterface("StopBits",self.cStopBits.currentText())
         self.pd.setInterface("FlowControl",self.cFlowControl.currentText())
         # page 3
+        self.pd.setInterface("NetworkIpAddress",self.cNetworkIpAddreess.text())
+        self.pd.setInterface("NetworkPort",self.cNetworkPort.text())
+        # page 4
         self.pd.setInterface("PromptCommand",self.cPromptCommand.text())
         self.pd.setInterface("PromptTimeout",self.cPromptTimeout.text())
         self.pd.setInterface("PromptConnected",self.cPromptConnected.text())
         self.pd.setInterface("PromptDisconnected",self.cPromptDisconnected.text())
-        # page 4
+        # page 5
         self.pd.setInterface("CommandMyCall",self.cCommandMyCall.text())
         self.pd.setInterface("CommandConnect",self.cCommandConnect.text())
         self.pd.setInterface("CommandRetry",self.cCommandRetry.text())
@@ -112,7 +118,7 @@ class InterfaceDialog(QDialog,Ui_InterfaceDialogClass):
         self.pd.setInterface("CommandDayTime",self.cCommandDayTime.text())
         self.pd.setInterface("IncludeCommandPrefix",self.cIncludeCommandPrefix.isChecked())
         self.pd.setInterface("CommandPrefix",self.cCommandPrefix.text())
-        # page 5
+        # page 6
         self.pd.setInterface("AlwaysSendInitCommands",self.cAlwaysSendInitCommands.isChecked())
         cb = self.cCommandsBefore.toPlainText()
         ca = self.cCommandsAfter.toPlainText()

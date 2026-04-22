@@ -6,51 +6,33 @@ import socket
 from globalsignals import global_signals
 
 import ax25
-from PySide6.QtCore import QObject, Signal, QTimer
+from PySide6.QtCore import QObject, Signal, QIODevice
 from PySide6.QtNetwork import QUdpSocket
 
-# hide these for ordinary serial ports
-BSIM_ADDR = None
-#BSIM_ADDR = "127.0.0.1"
-#BSIM_PORT_OUT = 2600
-#BSIM_PORT_IN = (BSIM_PORT_OUT+1)
-
 class SerialStream(QObject):
-    def __init__(self,serial_port:str):
+    def __init__(self,io_device:QIODevice):
         super().__init__()
         self.encoding = "utf-8"
         self._sdata = bytearray()
-        # no access to this if self.settings.getInterface("ConnectionType") == "Network":
-        if BSIM_ADDR:
-            self.serial_port = None
-            #self.sock_in = socket.socket(socket.AF_INET,socket.SOCK_DGRAM,socket.IPPROTO_UDP)
-            #self.sock_in.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-            #self.sock_in.bind((BSIM_ADDR,BSIM_PORT_IN))
-            self.sock_in = QUdpSocket()
-            self.sock_in.bind(BSIM_PORT_IN)
-            self.sock_in.readyRead.connect(self.read_pending_datagrams)
-            self.sock_out = socket.socket(socket.AF_INET,socket.SOCK_DGRAM,socket.IPPROTO_UDP)
-            self.sock_out.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-            self.sock_out.bind((BSIM_ADDR,BSIM_PORT_OUT))
-            #while (True):
-            #    b,r = sock.recvfrom(1540)
+        self.io_device = io_device
+        if isinstance(io_device,QUdpSocket):
+            self.io_device.readyRead.connect(self.read_pending_datagrams)
+            self._log_file = None
         else:
-            self.serial_port = serial_port
-            self.sock_in = None
-            self.sock_out = None
-            self.serial_port.readyRead.connect(self.on_serial_port_ready)
+            self.io_device.readyRead.connect(self.on_device_read_ready)
             self._log_file = open("serial.log","ab")
             if self._log_file:
                 self._log_file.write(b"\r\n--------\r\n")
 
     def reset(self) -> None:
-        if self.serial_port:
-            self.serial_port.close()
-            self.serial_port.readyRead.disconnect()
+        if self.io_device:
+            if not isinstance(self.io_device,QUdpSocket): # they do not need to be closed
+                self.io_device.close()
+            self.io_device.readyRead.disconnect()
         self._sdata.clear()
 
-    def on_serial_port_ready(self) -> None: # normal path, uses serial port
-        sdata = bytearray(self.serial_port.readAll())
+    def on_device_read_ready(self) -> None:
+        sdata = bytearray(self.io_device.readAll())
         if self._log_file:
             self._log_file.write(sdata)
             self._log_file.flush()
@@ -58,11 +40,10 @@ class SerialStream(QObject):
         return self.find_lines()
 
     def read_pending_datagrams(self):
-        while self.sock_in.hasPendingDatagrams():
-            datagram, host, port = self.sock_in.readDatagram(self.sock_in.pendingDatagramSize())
+        while self.io_device.hasPendingDatagrams():
+            datagram, host, port = self.io_device.readDatagram(self.io_device.pendingDatagramSize())
             self._sdata += datagram.data()
             return self.find_lines()        
-    
         
     def find_lines(self) -> None:
         pass
@@ -75,8 +56,8 @@ class SerialStream(QObject):
 
 
 class LineDelimitedSerialStream(SerialStream):
-    def __init__(self,serial_port):
-        super().__init__(serial_port)
+    def __init__(self,io_device:QIODevice):
+        super().__init__(io_device)
         self.bytes_already_searched = 0
         self.line_end = b"cmd:"
         self.include_line_end_in_reply = True
@@ -88,11 +69,11 @@ class LineDelimitedSerialStream(SerialStream):
         if not (s and s[0] != '\r'):
             pass
         assert(s and s[0] != '\r') # no blank lines
-        if self.serial_port:
-            self.serial_port.write(s.encode(self.encoding))
-        elif self.sock_out:
-            self.sock_out.sendto(s.encode(self.encoding),(BSIM_ADDR,BSIM_PORT_OUT))
-        if self.serial_port: # True:
+        if isinstance(self.io_device,QUdpSocket):
+            self.io_device.writeDatagram(s.encode(self.encoding),self.io_device.out_params[0],self.io_device.out_params[1])
+        else:
+            self.io_device.write(s.encode(self.encoding))
+        if True:
             if self._log_file:
                 tmp = s
                 #tmp = tmp.replace('\r',"<cr>")
@@ -148,8 +129,8 @@ TFESC = 0xdd
 
 class KissSerialStream(SerialStream):
     signal_frame_read = Signal(ax25.Frame)
-    def __init__(self,serial_port):
-        super().__init__(serial_port)
+    def __init__(self,io_device:QIODevice):
+        super().__init__(io_device)
 
     def write(self,b): # b is a complete KISS packet starting with the command byte which is generally 0
         # for c in b:
@@ -157,11 +138,11 @@ class KissSerialStream(SerialStream):
         # print("")
         self.debug_display(b)
         tmp = KissSerialStream.kiss_encode_plus(b)
-        if self.serial_port:
-            self.serial_port.write(tmp)
-        elif self.sock_out:
-            self.sock_out.sendto(tmp,(BSIM_ADDR,BSIM_PORT_OUT))
-        if self.serial_port: # True:
+        if isinstance(self.io_device,QUdpSocket):
+            self.io_device.sendto(tmp,self.io_device.out_params)
+        else:
+            self.io_device.write(tmp)
+        if True:
             if self._log_file:
                 tmp = tmp
                 self._log_file.write(tmp)

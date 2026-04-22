@@ -17,6 +17,7 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
+
 from enum import Enum
 from operator import attrgetter
 import re
@@ -28,6 +29,7 @@ from PySide6.QtCore import Qt,QIODeviceBase,QTimer,qDebug
 from PySide6.QtGui import QAction, QPalette, QColor
 from PySide6.QtSerialPort import QSerialPortInfo, QSerialPort
 from PySide6.QtWidgets import QMainWindow, QInputDialog, QMessageBox, QApplication, QStyleFactory, QLabel, QFrame, QStatusBar, QTableWidgetItem, QFileDialog, QMessageBox, QMenu
+from PySide6.QtNetwork import QUdpSocket, QHostAddress
 from fpdf import FPDF
 
 
@@ -51,13 +53,31 @@ import stationiddialog
 from tncparser import TAPR_Device, KISS_Device
 from ui_mainwindow import Ui_MainWindowClass
 
+def atoi(ss:str) -> int:
+    sign = 1
+    r = 0
+    ss = ss.strip()
+    if ss:
+        if ss[0] == '-':
+            sign = -1
+            ss = ss[1:]
+        elif ss[0] == '+':
+            sign = 1 # not really necessary
+            ss = ss[1:]
+        for s in ss:
+            if s.isdigit():
+                r = r*10 + (ord(s) - ord('0'))
+            else:
+                break
+    return r*sign
 
 class MainWindow(QMainWindow,Ui_MainWindowClass):
     def __init__(self):
         super().__init__()
 
         self.settings = PersistentData()
-        self.serialport = QSerialPort()
+        self.io_device = None # or just "in" if not bidirectional
+        self.out_device = None # only use if NOT bidirectional
         self.sdata = bytearray()
         self.serialStream = None
         self.tnc_parser = None
@@ -389,14 +409,14 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             return
         # port = port.partition('/')[0].rstrip()
 
-        f = self.open_serial_port()
+        f = self.open_io_device()
         if not f:
-            QMessageBox.critical(self,"Error",f"Error {self.serialport.errorString()} opening serial port")
+            QMessageBox.critical(self,"Error",f"Error {self.io_device.errorString()} opening serial port")
             return
         if self.settings.getInterface("Type") == "KISS":
-            self.serialStream = KissSerialStream(self.serialport)
+            self.serialStream = KissSerialStream(self.io_device)
         else:
-            self.serialStream = LineDelimitedSerialStream(self.serialport)
+            self.serialStream = LineDelimitedSerialStream(self.io_device)
         self.tnc_parser = KISS_Device(self.settings,self) ###
         #self.bbsParser = Nos2Parser(self.settings,self)
 
@@ -415,24 +435,24 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             return
         # port = port.partition('/')[0].rstrip()
 
-        f = self.open_serial_port()
+        f = self.open_io_device()
         if not f:
-            QMessageBox.critical(self,"Error",f"Error {self.serialport.errorString()} opening serial port")
+            QMessageBox.critical(self,"Error",f"Error {self.io_device.errorString()} opening serial port")
             return
         if mode:
-            self.serialport.write(b"INTFACE KISS\r")
-            self.serialport.write(b"RESET\r")
+            self.io_device.write(b"INTFACE KISS\r")
+            self.io_device.write(b"RESET\r")
             QTimer.singleShot(1000,self._tmp1)
         else:
-            self.serialport.write(b"\xc0\xff\xc0")
-            self.serialport.flush()
+            self.io_device.write(b"\xc0\xff\xc0")
+            self.io_device.flush()
             QTimer.singleShot(2000,self._tmp1)
-            #self.serialport.close()
+            #self.io_device.close()
             #QMessageBox.information(self,"Done","Done")
 
     def _tmp1(self):
-        r = self.serialport.readAll()
-        self.serialport.close()
+        r = self.io_device.readAll()
+        self.io_device.close()
         QMessageBox.information(self,"Done","Done")
 
     def on_new_message(self):
@@ -540,9 +560,22 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         # the just calls the auto-detector that double-clicking calls
         self.on_read_message(self,row,0)
 
-    def open_serial_port(self):
+    def open_io_device(self): # todo: allow tcp, files, others
         if self.settings.getInterface("ConnectionType") == "Network":
-            return True
+            return self.open_udp_port()
+        else:
+            return self.open_serial_port()
+        
+    def open_udp_port(self):
+        self.io_device = QUdpSocket()
+        out_port = atoi(self.settings.getInterface("NetworkPort"))
+        in_port = out_port + 1
+        self.io_device.bind(in_port)
+        self.io_device.out_params = (QHostAddress(self.settings.getInterface("NetworkIpAddress")),out_port)
+        return True
+    
+    def open_serial_port(self):
+        self.io_device = QSerialPort()
         # get all relevant settings - remember that at this point they are all strings
         port = self.settings.getInterface("ComPort")
         if not port:
@@ -554,38 +587,38 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         stopbits =self.settings.getInterface("StopBits")
         flowcontrol = self.settings.getInterface("FlowControl")
         flowcontrolflag = True
-        self.serialport.setPortName(port)
-        self.serialport.setBaudRate(int(baud))
+        self.io_device.setPortName(port)
+        self.io_device.setBaudRate(int(baud))
         if not parity: parity = "N"
         match parity.upper()[0]:
-            case 'E': self.serialport.setParity(QSerialPort.Parity.EvenParity)
-            case 'O': self.serialport.setParity(QSerialPort.Parity.OddParity)
-            case 'M': self.serialport.setParity(QSerialPort.Parity.MarkParity)
-            case 'S': self.serialport.setParity(QSerialPort.Parity.SpaceParity)
-            case _:   self.serialport.setParity(QSerialPort.Parity.NoParity)
+            case 'E': self.io_device.setParity(QSerialPort.Parity.EvenParity)
+            case 'O': self.io_device.setParity(QSerialPort.Parity.OddParity)
+            case 'M': self.io_device.setParity(QSerialPort.Parity.MarkParity)
+            case 'S': self.io_device.setParity(QSerialPort.Parity.SpaceParity)
+            case _:   self.io_device.setParity(QSerialPort.Parity.NoParity)
         match databits:
-            case '5': self.serialport.setDataBits(QSerialPort.DataBits.Data5)
-            case '6': self.serialport.setDataBits(QSerialPort.DataBits.Data6)
-            case '7': self.serialport.setDataBits(QSerialPort.DataBits.Data7)
-            case _:   self.serialport.setDataBits(QSerialPort.DataBits.Data8)
+            case '5': self.io_device.setDataBits(QSerialPort.DataBits.Data5)
+            case '6': self.io_device.setDataBits(QSerialPort.DataBits.Data6)
+            case '7': self.io_device.setDataBits(QSerialPort.DataBits.Data7)
+            case _:   self.io_device.setDataBits(QSerialPort.DataBits.Data8)
         match stopbits:
-            case "1":   self.serialport.setStopBits(QSerialPort.StopBits.OneStop)
-            case "1.5": self.serialport.setStopBits(QSerialPort.StopBits.OneAndHalfStop)
-            case "2":   self.serialport.setStopBits(QSerialPort.StopBits.TwoStop)
-            case _:     self.serialport.setStopBits(QSerialPort.StopBits.OneStop)
+            case "1":   self.io_device.setStopBits(QSerialPort.StopBits.OneStop)
+            case "1.5": self.io_device.setStopBits(QSerialPort.StopBits.OneAndHalfStop)
+            case "2":   self.io_device.setStopBits(QSerialPort.StopBits.TwoStop)
+            case _:     self.io_device.setStopBits(QSerialPort.StopBits.OneStop)
         if not flowcontrol: flowcontrol = "R"
         flowcontrolflag = flowcontrol.upper()[0]
         match flowcontrolflag:
-            case 'N': self.serialport.setFlowControl(QSerialPort.FlowControl.NoFlowControl)
-            case _:   self.serialport.setFlowControl(QSerialPort.FlowControl.HardwareControl)
-        f = self.serialport.open(QIODeviceBase.OpenModeFlag.ReadWrite)
+            case 'N': self.io_device.setFlowControl(QSerialPort.FlowControl.NoFlowControl)
+            case _:   self.io_device.setFlowControl(QSerialPort.FlowControl.HardwareControl)
+        f = self.io_device.open(QIODeviceBase.OpenModeFlag.ReadWrite)
         if not f:
-            print(f"open serial port {self.serialport.portName()} failed, returned {self.serialport.errorString()}")
+            print(f"open serial port {self.io_device.portName()} failed, returned {self.io_device.errorString()}")
             return False
-        print(f"open serial port {self.serialport.portName()} succeeded {self.serialport.baudRate()} {self.serialport.parity()} {self.serialport.dataBits()} {self.serialport.stopBits()} {self.serialport.flowControl()}")
+        print(f"open serial port {self.io_device.portName()} succeeded {self.io_device.baudRate()} {self.io_device.parity()} {self.io_device.dataBits()} {self.io_device.stopBits()} {self.io_device.flowControl()}")
         if flowcontrolflag != 'R':
-            self.serialport.setDataTerminalReady(True)
-            self.serialport.setRequestToSend(True)
+            self.io_device.setDataTerminalReady(True)
+            self.io_device.setRequestToSend(True)
         return True
     
     def on_send_receive(self,send:bool,recv:bool,sendimmediate:list[int]=None):
@@ -598,15 +631,15 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             return
         # port = port.partition('/')[0].rstrip()
 
-        f = self.open_serial_port()
+        f = self.open_io_device()
         if not f:
-            QMessageBox.critical(self,"Error",f"Error {self.serialport.errorString()} opening serial port")
+            QMessageBox.critical(self,"Error",f"Error {self.io_device.errorString()} opening serial port")
             return
         if self.settings.getInterface("Type") == "KISS":
-            self.serialStream = KissSerialStream(self.serialport)
+            self.serialStream = KissSerialStream(self.io_device)
             self.tnc_parser = KISS_Device(self.settings,self)
         else:
-            self.serialStream = LineDelimitedSerialStream(self.serialport)
+            self.serialStream = LineDelimitedSerialStream(self.io_device)
             self.tnc_parser = TAPR_Device(self.settings,self)
 
         #self.bbsParser = Nos2Parser(self.settings,self)
@@ -632,11 +665,12 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         self.on_send_receive(True,False,index)
 
     def on_end_send_receive(self):
-        #self.serialport.close()
+        #self.io_device.close()
         # this causes a loop # self.tnc_parser.end_session()
         if self.serialStream:
             self.serialStream.reset()
         self.serialStream = None
+        self.io_device = None
         self.tnc_parser = None
 
     def find_tags(m:str):
