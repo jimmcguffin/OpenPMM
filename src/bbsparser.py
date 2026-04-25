@@ -246,7 +246,7 @@ class Jnos2Parser(BbsParser):
                     self.current_area = words[1].upper()
                 elif len(words) >= 3 and words[0] == "Mail" and words[1] == "area:":
                     self.current_area = words[2].upper()
-                elif words[0] == "St.": # perhaps allow other ways to determine this
+                elif len(words) >= 1 and words[0] == "St.": # perhaps allow other ways to determine this
                     in_message_portion = True
             else:
                 # we are in message portion
