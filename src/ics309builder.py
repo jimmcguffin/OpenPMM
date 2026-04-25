@@ -1,7 +1,7 @@
 import sys
 
 from PySide6 import QtWidgets
-from PySide6.QtCore import QDateTime, QDate, Signal
+from PySide6.QtCore import Qt, QDateTime, QDate, QTime, Signal
 from PySide6.QtWidgets import QMainWindow
 from persistentdata import PersistentData
 from ui_ics309builder import Ui_Ics309Builder
@@ -14,6 +14,7 @@ class Ics309Builder(QMainWindow,Ui_Ics309Builder):
         super().__init__(parent)
         self.pd = pd
         self.setupUi(self)
+        self.tabWidget.setCurrentIndex(0)
         # these settings apepar to be global, not a part of the profile
         #self.c_date_time.setText(self.pd.settings.value("309Settings/OperationalPeriod",""))
         self.c_incident_name.setText(self.pd.settings.value("309Settings/IncidentName",""))
@@ -28,9 +29,11 @@ class Ics309Builder(QMainWindow,Ui_Ics309Builder):
         self.c_operational_period_to.setDateTime(dt)
         self.c_tactical_info.setText(self.pd.settings.value("309Settings/TacticalInfo",f"{self.pd.getTacticalCallSign("Name")} / {self.pd.getActiveTacticalCallSign()}"))
         self.c_user_info.setText(self.pd.settings.value("309Settings/UserInfo",f"{self.pd.getUserCallSign("Name")} / {self.pd.getActiveUserCallSign()}"))
+        dt = QDateTime.currentDateTime()
         range = self.pd.settings.value("309Settings/Range",0)
         if range < 0 or range > 3:
             range = 0
+        self.c_page1_today.setText(f"Today ({dt.toString("MM-dd-yyyy")})")
         self.c_page1_today.setChecked(range==0)
         self.c_page1_since_last.setChecked(range==1)
         self.c_page1_all.setChecked(range==2)
@@ -43,9 +46,34 @@ class Ics309Builder(QMainWindow,Ui_Ics309Builder):
         self.c_page1_custom_range_to.setDateTime(dt)
         
         self.c_build_data_set.clicked.connect(self.on_build_data_set)
+        self.c_print.clicked.connect(self.on_print)
+        self.actionExit.triggered.connect(self.on_exit)
         self.actionExit.triggered.connect(self.on_exit)
         self.c_exit.clicked.connect(self.on_exit)
+        self.c_page1_today.clicked.connect(self.update_range)
+        self.c_page1_since_last.clicked.connect(self.update_range)
+        self.c_page1_all.clicked.connect(self.update_range)
+        self.c_page1_custom_range.clicked.connect(self.update_range)
+        self.c_reset_defaults.clicked.connect(self.reset_defaults)
+        self.update_range()
+        self.data = []
 
+    def update_range(self):
+        iscustom = self.c_page1_custom_range.isChecked()
+        self.c_page1_custom_range_from.setEnabled(iscustom)
+        self.c_page1_custom_range_to.setEnabled(iscustom)
+
+    def reset_defaults(self):
+        dt = QDateTime.currentDateTime()
+        # maybe set times to 8am and 6pm or similar
+        dt.setTime(QTime(8,0,0))
+        self.c_operational_period_from.setDateTime(dt)
+        dt.setTime(QTime(18,0,0))
+        self.c_operational_period_to.setDateTime(dt)
+        self.c_tactical_info.setText(f"{self.pd.getTacticalCallSign("Name")} / {self.pd.getActiveTacticalCallSign()}")
+        self.c_user_info.setText(f"{self.pd.getUserCallSign("Name")} / {self.pd.getActiveUserCallSign()}")
+        self.save()
+    
     def save(self):
         self.pd.settings.setValue("309Settings/IncidentName",self.c_incident_name.text())
         self.pd.settings.setValue("309Settings/ActivationNumber",self.c_activation_number.text())
@@ -68,17 +96,42 @@ class Ics309Builder(QMainWindow,Ui_Ics309Builder):
 
     def on_build_data_set(self):
         self.save()
-        # Create a PDF object
-        # this is some work in progress
-        pdf = f309(self.pd)
+        # compute the time range
+        range = self.pd.settings.value("309Settings/Range",0)
+        dt0 = QDateTime.currentDateTime()
+        dt1 = QDateTime.currentDateTime()
+        if range < 0 or range > 3:
+            range = 0
+        if range == 0: # today
+            dt0.setTime(QTime(0,0)) # today from midnight to midnight
+            dt1 = dt0.addDays(1)
+        elif range == 1: # since last
+            pass #!!! not ready
+        elif range == 2: # all
+            pass # just skips compare
+        else:
+            dt0 = QDateTime.fromString(self.pd.settings.value("309Settings/CustomRangeFrom",""),date_time_format)
+            dt1 = QDateTime.fromString(self.pd.settings.value("309Settings/CustomRangeTo",""),date_time_format)
+        self.data.clear()
         try:
-            with open("test.log","rt",encoding="windows-1252") as file:
+            with open("activity.log","rt",encoding="windows-1252") as file:
                 for line in file.readlines():
                     line = line.rstrip()
                     f = line.split(",",7)
-                    pdf.add_data(f)
+                    if len(f) == 8:
+                        dt = QDateTime.fromString(f[1],Qt.DateFormat.ISODate)
+                        if range == 2 or (dt >= dt0 and dt < dt1):
+                            self.data.append(f)
         except FileNotFoundError:
             pass
+
+    def on_print(self):
+        self.on_build_data_set() # in case caller did not do this
+        # Create a PDF object
+        # this is some work in progress
+        pdf = f309(self.pd)
+        for d in self.data:
+            pdf.add_data(d)
         pdf.done()
 
 

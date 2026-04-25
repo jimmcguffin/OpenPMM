@@ -43,7 +43,7 @@
    <widget class="QPushButton" name="c_exit">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>510</x>
       <y>10</y>
       <width>75</width>
       <height>30</height>
@@ -168,102 +168,12 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>5</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
       <string>Period</string>
      </attribute>
-    </widget>
-    <widget class="QWidget" name="tab_2">
-     <attribute name="title">
-      <string>Content</string>
-     </attribute>
-    </widget>
-    <widget class="QWidget" name="tab_3">
-     <attribute name="title">
-      <string>Sort</string>
-     </attribute>
-    </widget>
-    <widget class="QWidget" name="tab_4">
-     <attribute name="title">
-      <string>Layout</string>
-     </attribute>
-    </widget>
-    <widget class="QWidget" name="tab_5">
-     <attribute name="title">
-      <string>Output</string>
-     </attribute>
-    </widget>
-    <widget class="QWidget" name="tab_6">
-     <attribute name="title">
-      <string>e-Signature</string>
-     </attribute>
-     <widget class="QRadioButton" name="c_page1_today">
-      <property name="geometry">
-       <rect>
-        <x>15</x>
-        <y>20</y>
-        <width>170</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Today</string>
-      </property>
-     </widget>
-     <widget class="QRadioButton" name="c_page1_since_last">
-      <property name="geometry">
-       <rect>
-        <x>15</x>
-        <y>45</y>
-        <width>170</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Since last report run</string>
-      </property>
-     </widget>
-     <widget class="QRadioButton" name="c_page1_all">
-      <property name="geometry">
-       <rect>
-        <x>15</x>
-        <y>70</y>
-        <width>170</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>All </string>
-      </property>
-     </widget>
-     <widget class="QRadioButton" name="c_page1_custom_range">
-      <property name="geometry">
-       <rect>
-        <x>15</x>
-        <y>95</y>
-        <width>170</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Custom range</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_12">
-      <property name="geometry">
-       <rect>
-        <x>40</x>
-        <y>145</y>
-        <width>49</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>To</string>
-      </property>
-     </widget>
      <widget class="QLabel" name="label_7">
       <property name="geometry">
        <rect>
@@ -277,47 +187,17 @@
        <string>From</string>
       </property>
      </widget>
-     <widget class="QDateTimeEdit" name="c_page1_custom_range_to">
+     <widget class="QRadioButton" name="c_page1_custom_range">
       <property name="geometry">
        <rect>
-        <x>85</x>
-        <y>140</y>
-        <width>160</width>
-        <height>24</height>
+        <x>15</x>
+        <y>95</y>
+        <width>170</width>
+        <height>20</height>
        </rect>
       </property>
-      <property name="dateTime">
-       <datetime>
-        <hour>0</hour>
-        <minute>0</minute>
-        <second>0</second>
-        <year>2026</year>
-        <month>4</month>
-        <day>24</day>
-       </datetime>
-      </property>
-      <property name="date">
-       <date>
-        <year>2026</year>
-        <month>4</month>
-        <day>24</day>
-       </date>
-      </property>
-      <property name="minimumDateTime">
-       <datetime>
-        <hour>0</hour>
-        <minute>0</minute>
-        <second>0</second>
-        <year>2020</year>
-        <month>1</month>
-        <day>1</day>
-       </datetime>
-      </property>
-      <property name="displayFormat">
-       <string>MM-dd-yyyy HH:mm</string>
-      </property>
-      <property name="calendarPopup">
-       <bool>true</bool>
+      <property name="text">
+       <string>Custom range</string>
       </property>
      </widget>
      <widget class="QDateTimeEdit" name="c_page1_custom_range_from">
@@ -363,6 +243,126 @@
        <bool>true</bool>
       </property>
      </widget>
+     <widget class="QRadioButton" name="c_page1_all">
+      <property name="geometry">
+       <rect>
+        <x>15</x>
+        <y>70</y>
+        <width>170</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>All </string>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="c_page1_today">
+      <property name="geometry">
+       <rect>
+        <x>15</x>
+        <y>20</y>
+        <width>170</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Today</string>
+      </property>
+     </widget>
+     <widget class="QDateTimeEdit" name="c_page1_custom_range_to">
+      <property name="geometry">
+       <rect>
+        <x>85</x>
+        <y>140</y>
+        <width>160</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="dateTime">
+       <datetime>
+        <hour>0</hour>
+        <minute>0</minute>
+        <second>0</second>
+        <year>2026</year>
+        <month>4</month>
+        <day>24</day>
+       </datetime>
+      </property>
+      <property name="date">
+       <date>
+        <year>2026</year>
+        <month>4</month>
+        <day>24</day>
+       </date>
+      </property>
+      <property name="minimumDateTime">
+       <datetime>
+        <hour>0</hour>
+        <minute>0</minute>
+        <second>0</second>
+        <year>2020</year>
+        <month>1</month>
+        <day>1</day>
+       </datetime>
+      </property>
+      <property name="displayFormat">
+       <string>MM-dd-yyyy HH:mm</string>
+      </property>
+      <property name="calendarPopup">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="c_page1_since_last">
+      <property name="geometry">
+       <rect>
+        <x>15</x>
+        <y>45</y>
+        <width>170</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Since last report run</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_12">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>145</y>
+        <width>49</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>To</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_2">
+     <attribute name="title">
+      <string>Content</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="tab_3">
+     <attribute name="title">
+      <string>Sort</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="tab_4">
+     <attribute name="title">
+      <string>Layout</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="tab_5">
+     <attribute name="title">
+      <string>Output</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="tab_6">
+     <attribute name="title">
+      <string>e-Signature</string>
+     </attribute>
     </widget>
    </widget>
    <widget class="QLabel" name="label_4">
@@ -477,6 +477,19 @@
      <bool>true</bool>
     </property>
    </widget>
+   <widget class="QPushButton" name="c_reset_defaults">
+    <property name="geometry">
+     <rect>
+      <x>315</x>
+      <y>10</y>
+      <width>110</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Reset Defaults</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -588,12 +601,6 @@
   <tabstop>c_tactical_info</tabstop>
   <tabstop>c_user_info</tabstop>
   <tabstop>tabWidget</tabstop>
-  <tabstop>c_page1_today</tabstop>
-  <tabstop>c_page1_since_last</tabstop>
-  <tabstop>c_page1_all</tabstop>
-  <tabstop>c_page1_custom_range</tabstop>
-  <tabstop>c_page1_custom_range_from</tabstop>
-  <tabstop>c_page1_custom_range_to</tabstop>
  </tabstops>
  <resources/>
  <connections/>
