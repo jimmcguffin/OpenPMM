@@ -17,8 +17,19 @@ class MonitorDialog(QDialog,Ui_MonitorDialogClass):
         global_signals.signal_monitor_msg_ax25.connect(self.on_msg)
         self.c_text.setReadOnly(True)
 
+    def resizeEvent(self,event):
+        self.c_text.resize(event.size().width()-20,event.size().height()-20)
+        return super().resizeEvent(event)
+
     def on_msg(self,msg:bytes):
-        frame = ax25.Frame.unpack(msg)
+        try:
+            frame = ax25.Frame.unpack(msg)
+        except (ValueError, IndexError) as e:
+            print("Error reading this header:",end=" ")
+            for c in msg:
+                print(f"{c:02x}",end=" ")
+            print("\n")
+            return
         now = datetime.now()
         line = f"[{now.strftime("%H:%M:%S.%f")}] {frame.src.call}"
         if frame.src.ssid: line += f"-{frame.src.ssid}"
@@ -39,13 +50,58 @@ class MonitorDialog(QDialog,Ui_MonitorDialogClass):
         if not ft.is_U():
             line += f", n(r)={control.recv_seqno}"
         line += f", p={1 if control.poll_final else 0}"
-        if ft is ax25.FrameType.I or ft is ax25.FrameType.UI:
+        # handle APRS specially
+        if ft is ax25.FrameType.UI and frame.data and frame.data[:1] in {b'!',b'=',b'@',b'/'}:
+            symbol_table_id = " "
+            symbol_code = " "
+            tm = "000000z"
+            lat = "0000.00N"
+            lon = "00000.00W"
+            spos = 1
+            if frame.data[:1] == b'!' or frame.data[:1] == b'=':
+                pass
+            else: # frame.data[:1] == b'@' or frame.data[:1] == b'/':
+                tm = frame.data[spos:spos+len(tm)]
+                spos += len(tm)
+            if frame.data[spos:spos+1] == '/': # compressed data
+                symbol_table_id = frame.data[spos:spos+len(symbol_table_id)]
+                spos += len(symbol_table_id)
+                latf = 90.0 - self.base91_decode(frame.data[spos:spos+4])/380926
+                spos += 4
+                lonf = 180.0 + self.base91_decode(frame.data[spos:spos+4])/190463
+                spos += 4
+            else:
+                lat = frame.data[spos:spos+len(lat)]
+                spos += len(lat)
+                symbol_table_id = frame.data[spos:spos+len(symbol_table_id)]
+                spos += len(symbol_table_id)
+                lon = frame.data[spos:spos+len(lon)]
+                spos += len(lon)
+                latf = int(lat[0:2]) + float(lat[2:7])/60.0
+                if lat[7:8] == b'S':
+                    latf = -latf
+                lonf = int(lon[0:3]) + float(lon[3:8])/60.0
+                if lon[8:9] == b'W':
+                    lonf = -lonf
+            line += f", loc={latf:.4f},{lonf:.4f}) {frame.data}"
+        elif ft is ax25.FrameType.I or ft is ax25.FrameType.UI:
             line += f", pid={frame.pid:02X}, len={len(frame.data)}) {frame.data}"
         else:
             line += ")"
-        line += "\r\n"
-        self.c_text.textCursor().movePosition(QTextCursor.End)
-        self.c_text.insertPlainText(line)
-        self.c_text.ensureCursorVisible()
+        vbar = self.c_text.verticalScrollBar()
+        was_at_end = (vbar.value() == vbar.maximum())
+        self.c_text.appendPlainText(line)
+        if not was_at_end:
+            vbar.setValue(vbar.maximum())
+    
+    @staticmethod
+    def base91_decode(b:bytes) -> float:
+        assert(len(b) == 4)
+        return (b[0]-33)*91*91*91 + (b[1]-33)*91*91 + (b[2]-33)*91 + b[3]-33
 
-
+    @staticmethod
+    def base91_encode(i:int) -> bytes:
+        b1,r = divmod(i,91*91*91)
+        b2,r = divmod(r,91*91)
+        b3,b4 = divmod(r,91)
+        return bytes([b1+33,b2+33,b3+33,b4+33])
