@@ -30,6 +30,7 @@ class Ui_MonitorDialogClass(object):
         self.c_text.setReadOnly(True)
         self.c_text.setPlainText(u"")
         self.c_text.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
+        self.c_text.setMaximumBlockCount(2048)
 
         self.retranslateUi(MonitorDialogClass)
     # setupUi

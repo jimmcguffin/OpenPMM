@@ -118,6 +118,11 @@ class PersistentData():
                 return self.activeTacticalCallSign
         else:
             return self.activeUserCallSign
+    def get_active_callsigns(self):
+        if self.getProfileBool("UseTacticalCallSign"):
+            return (self.activeTacticalCallSign.upper(),self.activeUserCallSign.upper()) # return tactical and user
+        else:
+            return (self.activeUserCallSign.upper(),self.activeUserCallSign.upper()) # return just user (twice to keep it simple)
     def getActiveCallSignName(self):
         if self.getProfileBool("UseTacticalCallSign"):
             return self.getTacticalCallSign("Name")

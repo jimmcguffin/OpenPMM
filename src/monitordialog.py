@@ -21,6 +21,10 @@ class MonitorDialog(QDialog,Ui_MonitorDialogClass):
         self.c_text.resize(event.size().width()-20,event.size().height()-20)
         return super().resizeEvent(event)
 
+    def closeEvent(self, arg__1):
+        global_signals.signal_end_send_receive.emit() # this will shut things down
+        return super().closeEvent(arg__1)
+
     def on_msg(self,msg:bytes):
         try:
             frame = ax25.Frame.unpack(msg)
@@ -63,14 +67,8 @@ class MonitorDialog(QDialog,Ui_MonitorDialogClass):
             else: # frame.data[:1] == b'@' or frame.data[:1] == b'/':
                 tm = frame.data[spos:spos+len(tm)]
                 spos += len(tm)
-            if frame.data[spos:spos+1] == '/': # compressed data
-                symbol_table_id = frame.data[spos:spos+len(symbol_table_id)]
-                spos += len(symbol_table_id)
-                latf = 90.0 - self.base91_decode(frame.data[spos:spos+4])/380926
-                spos += 4
-                lonf = 180.0 + self.base91_decode(frame.data[spos:spos+4])/190463
-                spos += 4
-            else:
+            firstchar = ord(frame.data[spos:spos+1])
+            if firstchar >= ord('0') and firstchar <= ord('9'): # digits means uncompressed
                 lat = frame.data[spos:spos+len(lat)]
                 spos += len(lat)
                 symbol_table_id = frame.data[spos:spos+len(symbol_table_id)]
@@ -83,6 +81,15 @@ class MonitorDialog(QDialog,Ui_MonitorDialogClass):
                 lonf = int(lon[0:3]) + float(lon[3:8])/60.0
                 if lon[8:9] == b'W':
                     lonf = -lonf
+            else:
+                symbol_table_id = frame.data[spos:spos+len(symbol_table_id)]
+                spos += len(symbol_table_id)
+                latf = 90.0 - self.base91_decode(frame.data[spos:spos+4])/380926
+                spos += 4
+                lonf = 180.0 + self.base91_decode(frame.data[spos:spos+4])/190463
+                if lonf >= 180.0:
+                    lonf = lonf - 360.0
+                spos += 4
             line += f", loc={latf:.4f},{lonf:.4f}) {frame.data}"
         elif ft is ax25.FrameType.I or ft is ax25.FrameType.UI:
             line += f", pid={frame.pid:02X}, len={len(frame.data)}) {frame.data}"

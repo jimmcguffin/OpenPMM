@@ -34,7 +34,6 @@ from PySide6.QtNetwork import QUdpSocket, QHostAddress
 
 import aboutdialog
 import bbsdialog
-from bbsparser import Jnos2Parser
 import formdialog
 import generalsettingsdialog
 from globalsignals import global_signals
@@ -44,13 +43,13 @@ import monitordialog
 import messagesettingsdialog
 import newpacketmessage
 from persistentdata import PersistentData
+import pipeline
 import readmessagedialog
 import searchdialog
-from serialstream import SerialStream,LineDelimitedSerialStream,KissSerialStream
+from serialstream import Level1,LineParser,KissParser
 import sendreceivesettingsdialog
 from sql_mailbox import MailBox, MailBoxHeader, MailFlags, FieldsToSearch
 import stationiddialog
-from tncparser import TAPR_Device, KISS_Device
 from ui_mainwindow import Ui_MainWindowClass
 
 def atoi(ss:str) -> int:
@@ -76,11 +75,9 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         super().__init__()
 
         self.settings = PersistentData()
+        self.pipeline = None
         self.io_device = None # or just "in" if not bidirectional
-        self.out_device = None # only use if NOT bidirectional
-        self.sdata = bytearray()
-        self.serialStream = None
-        self.tnc_parser = None
+        self.bbs_parser = None
         self.tempory_status_bar_message = ""
         # self.settings.clear()
         # special things that have to be done the first time
@@ -234,7 +231,7 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         global_signals.signal_new_outgoing_form_message.connect(self.handle_new_outgoing_form_message)
         global_signals.signal_new_outgoing_receipt.connect(self.handle_new_outgoing_receipt)
         global_signals.signal_resend_text_messasge.connect(self.handle_resend_text_message)
-
+        global_signals.signal_status_bar_message.connect(self.on_status_bar_message)
 
     def closeEvent(self, event):
         if self.mailbox.needs_cleaning():
@@ -405,24 +402,29 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
 
     def on_monitor(self):
         # if a cycle was in progress, cancel it
-        if self.tnc_parser:
-            self.on_end_send_receive()
+        self.on_end_send_receive()
+        global_signals.signal_end_send_receive.connect(self.on_end_send_receive)
+
         port = self.settings.getInterface("ComPort")
         if not port:
             QMessageBox.critical(self,"Error",f"Error serial port has not been configuired, go to Setup/Interface")
             return
-        # port = port.partition('/')[0].rstrip()
-
         f = self.open_io_device()
         if not f:
             QMessageBox.critical(self,"Error",f"Error {self.io_device.errorString()} opening serial port")
             return
+
+##        if self.settings.getInterface("Type") == "KISS":
+##            self.serialStream = KissSerialStream(self.io_device)
+# #       else:
+ ##           self.serialStream = LineDelimitedSerialStream(self.io_device)
+  #      self.tnc_parser = KISS_Device(self.settings,self) ###
+   #     #self.bbsParser = Nos2Parser(self.settings,self)
         if self.settings.getInterface("Type") == "KISS":
-            self.serialStream = KissSerialStream(self.io_device)
+            self.pipeline = pipeline.KISS_Pipeline(self.settings,self.io_device)
         else:
-            self.serialStream = LineDelimitedSerialStream(self.io_device)
-        self.tnc_parser = KISS_Device(self.settings,self) ###
-        #self.bbsParser = Nos2Parser(self.settings,self)
+            self.pipeline = pipeline.TAPR_Pipeline(self.settings,self.io_device)
+        self.pipeline.start_monitor_session()
 
         tmp = monitordialog.MonitorDialog(self.settings,self)
         tmp.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
@@ -431,8 +433,7 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
 
     def set_kiss_mode(self,mode:bool):
         # if a cycle was in progress, cancel it
-        if self.tnc_parser:
-            self.on_end_send_receive()
+        self.on_end_send_receive()
         port = self.settings.getInterface("ComPort")
         if not port:
             QMessageBox.critical(self,"Error",f"Error serial port has not been configuired, go to Setup/Interface")
@@ -446,7 +447,7 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         if mode:
             self.io_device.write(b"INTFACE KISS\r")
             self.io_device.write(b"RESET\r")
-            QTimer.singleShot(1000,self._tmp1)
+            QTimer.singleShot(4000,self._tmp1)
         else:
             self.io_device.write(b"\xc0\xff\xc0")
             self.io_device.flush()
@@ -455,8 +456,9 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             #QMessageBox.information(self,"Done","Done")
 
     def _tmp1(self):
-        r = self.io_device.readAll()
-        self.io_device.close()
+        # r = self.io_device.readAll()
+        self.io_device.on_device_read_ready()
+        self.io_device.reset()
         QMessageBox.information(self,"Done","Done")
 
     def on_new_message(self):
@@ -570,22 +572,22 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         # the just calls the auto-detector that double-clicking calls
         self.on_read_message(self,row,0)
 
-    def open_io_device(self): # todo: allow tcp, files, others
+    def open_io_device(self,logfile_name=None): # todo: allow tcp, files, others
         if self.settings.getInterface("ConnectionType") == "Network":
             return self.open_udp_port()
         else:
-            return self.open_serial_port()
+            return self.open_serial_port(logfile_name)
         
     def open_udp_port(self):
-        self.io_device = QUdpSocket()
+        self.io_device = Level1(QUdpSocket())
         out_port = atoi(self.settings.getInterface("NetworkPort"))
         in_port = out_port + 1
         self.io_device.bind(in_port)
         self.io_device.out_params = (QHostAddress(self.settings.getInterface("NetworkIpAddress")),out_port)
         return True
     
-    def open_serial_port(self):
-        self.io_device = QSerialPort()
+    def open_serial_port(self,logfile_name=None):
+        self.io_device = Level1(QSerialPort(),logfile_name)
         # get all relevant settings - remember that at this point they are all strings
         port = self.settings.getInterface("ComPort")
         if not port:
@@ -597,67 +599,59 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         stopbits =self.settings.getInterface("StopBits")
         flowcontrol = self.settings.getInterface("FlowControl")
         flowcontrolflag = True
-        self.io_device.setPortName(port)
-        self.io_device.setBaudRate(int(baud))
+        sp = self.io_device.io_device
+        sp.setPortName(port)
+        sp.setBaudRate(int(baud))
         if not parity: parity = "N"
         match parity.upper()[0]:
-            case 'E': self.io_device.setParity(QSerialPort.Parity.EvenParity)
-            case 'O': self.io_device.setParity(QSerialPort.Parity.OddParity)
-            case 'M': self.io_device.setParity(QSerialPort.Parity.MarkParity)
-            case 'S': self.io_device.setParity(QSerialPort.Parity.SpaceParity)
-            case _:   self.io_device.setParity(QSerialPort.Parity.NoParity)
+            case 'E': sp.setParity(QSerialPort.Parity.EvenParity)
+            case 'O': sp.setParity(QSerialPort.Parity.OddParity)
+            case 'M': sp.setParity(QSerialPort.Parity.MarkParity)
+            case 'S': sp.setParity(QSerialPort.Parity.SpaceParity)
+            case _:   sp.setParity(QSerialPort.Parity.NoParity)
         match databits:
-            case '5': self.io_device.setDataBits(QSerialPort.DataBits.Data5)
-            case '6': self.io_device.setDataBits(QSerialPort.DataBits.Data6)
-            case '7': self.io_device.setDataBits(QSerialPort.DataBits.Data7)
-            case _:   self.io_device.setDataBits(QSerialPort.DataBits.Data8)
+            case '5': sp.setDataBits(QSerialPort.DataBits.Data5)
+            case '6': sp.io_device.setDataBits(QSerialPort.DataBits.Data6)
+            case '7': sp.setDataBits(QSerialPort.DataBits.Data7)
+            case _:   sp.setDataBits(QSerialPort.DataBits.Data8)
         match stopbits:
-            case "1":   self.io_device.setStopBits(QSerialPort.StopBits.OneStop)
-            case "1.5": self.io_device.setStopBits(QSerialPort.StopBits.OneAndHalfStop)
-            case "2":   self.io_device.setStopBits(QSerialPort.StopBits.TwoStop)
-            case _:     self.io_device.setStopBits(QSerialPort.StopBits.OneStop)
+            case "1":   sp.setStopBits(QSerialPort.StopBits.OneStop)
+            case "1.5": sp.setStopBits(QSerialPort.StopBits.OneAndHalfStop)
+            case "2":   sp.setStopBits(QSerialPort.StopBits.TwoStop)
+            case _:     sp.setStopBits(QSerialPort.StopBits.OneStop)
         if not flowcontrol: flowcontrol = "R"
         flowcontrolflag = flowcontrol.upper()[0]
         match flowcontrolflag:
-            case 'N': self.io_device.setFlowControl(QSerialPort.FlowControl.NoFlowControl)
-            case _:   self.io_device.setFlowControl(QSerialPort.FlowControl.HardwareControl)
-        f = self.io_device.open(QIODeviceBase.OpenModeFlag.ReadWrite)
+            case 'N': sp.setFlowControl(QSerialPort.FlowControl.NoFlowControl)
+            case _:   sp.setFlowControl(QSerialPort.FlowControl.HardwareControl)
+        f = sp.open(QIODeviceBase.OpenModeFlag.ReadWrite)
         if not f:
-            print(f"open serial port {self.io_device.portName()} failed, returned {self.io_device.errorString()}")
+            print(f"open serial port {sp.portName()} failed, returned {sp.errorString()}")
             return False
-        print(f"open serial port {self.io_device.portName()} succeeded {self.io_device.baudRate()} {self.io_device.parity()} {self.io_device.dataBits()} {self.io_device.stopBits()} {self.io_device.flowControl()}")
+        print(f"open serial port {sp.portName()} succeeded {sp.baudRate()} {sp.parity()} {sp.dataBits()} {sp.stopBits()} {sp.flowControl()}")
         if flowcontrolflag != 'R':
-            self.io_device.setDataTerminalReady(True)
-            self.io_device.setRequestToSend(True)
+            sp.setDataTerminalReady(True)
+            sp.setRequestToSend(True)
         return True
     
     def on_send_receive(self,send:bool,recv:bool,sendimmediate:list[int]=None):
         # if a cycle was in progress, cancel it
-        if self.tnc_parser:
-            self.on_end_send_receive()
+        self.on_end_send_receive()
+
         port = self.settings.getInterface("ComPort")
         if not port:
             QMessageBox.critical(self,"Error",f"Error serial port has not been configuired, go to Setup/Interface")
             return
         # port = port.partition('/')[0].rstrip()
 
-        f = self.open_io_device()
+        f = self.open_io_device("serial.log") # this step creates self.io_device
         if not f:
             QMessageBox.critical(self,"Error",f"Error {self.io_device.errorString()} opening serial port")
             return
-        if self.settings.getInterface("Type") == "KISS":
-            self.serialStream = KissSerialStream(self.io_device)
-            self.tnc_parser = KISS_Device(self.settings,self)
-        else:
-            self.serialStream = LineDelimitedSerialStream(self.io_device)
-            self.tnc_parser = TAPR_Device(self.settings,self)
-
-        #self.bbsParser = Nos2Parser(self.settings,self)
 
         global_signals.signal_new_incoming_message.connect(self.on_new_incoming_message)
         global_signals.signal_message_sent.connect(self.on_message_sent)
-        global_signals.signal_disconnected.connect(self.on_end_send_receive)
-        self.tnc_parser.signal_status_bar_message.connect(self.on_status_bar_message)
+        global_signals.signal_end_send_receive.connect(self.on_end_send_receive)
         srflags = 0
         if send:
             srflags |= 1
@@ -665,7 +659,14 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             srflags |= 2
         if recv and self.settings.getBBSBool("RetrieveBulletins"):
             srflags |= 4
-        self.tnc_parser.start_session(self.serialStream,self.mailbox,srflags,sendimmediate)
+
+        mycalls = self.settings.get_active_callsigns()
+        bbscall = self.settings.getBBS("ConnectName").upper()
+        if self.settings.getInterface("Type") == "KISS":
+            self.pipeline = pipeline.KISS_Pipeline(self.settings,self.io_device)
+        else:
+            self.pipeline = pipeline.TAPR_Pipeline(self.settings,self.io_device)
+        self.pipeline.start_session(mycalls,bbscall,self.mailbox,srflags,sendimmediate)
 
     def on_send_immediately(self,row):
         if row < 0 or row >= len(self.mailIndex): 
@@ -675,13 +676,15 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         self.on_send_receive(True,False,index)
 
     def on_end_send_receive(self):
-        #self.io_device.close()
-        # this causes a loop # self.tnc_parser.end_session()
-        if self.serialStream:
-            self.serialStream.reset()
-        self.serialStream = None
+        # first, tell the pipeline
+        if self.pipeline:
+            self.pipeline.stop_session()
+            self.pipeline = None
+        # then close the input device
+        if self.io_device:
+            self.io_device.reset()
         self.io_device = None
-        self.tnc_parser = None
+        global_signals.signal_status_bar_message.emit("")
 
     def find_tags(m:str):
         """ parses all tags in first line of message, retuns a dictionary """
@@ -1090,6 +1093,9 @@ if __name__ == "__main__":
     #     p.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.white)
     #     app.setPalette(p)
 
+    #x = b'`1\\$m>)k/`"4:'
+    #print(90.0-monitordialog.MonitorDialog.base91_decode(x[2:6])/380926)
+    print((180.0+monitordialog.MonitorDialog.base91_decode(x[6:10])/190463)-360)
 
     mainwindow = MainWindow()
     mainwindow.show()

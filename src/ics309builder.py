@@ -7,7 +7,7 @@ from persistentdata import PersistentData
 from ui_ics309builder import Ui_Ics309Builder
 from fpdf import FPDF
 
-date_time_format = "MM-dd-yyyy HH:mm"
+date_time_format = "MM/dd/yyyy HH:mm"
 
 class Ics309Builder(QMainWindow,Ui_Ics309Builder):
     def __init__(self,pd:PersistentData,parent=None):
@@ -21,11 +21,11 @@ class Ics309Builder(QMainWindow,Ui_Ics309Builder):
         self.c_activation_number.setText(self.pd.settings.value("309Settings/ActivationNumber",""))
         #self.c_operational_period_from.setText(self.pd.settings.value("309Settings/OperationalPeriodFrom",""))
         #self.c_operational_period_to.setText(self.pd.settings.value("309Settings/OperationalPeriodTo",""))
-        tmp = self.pd.settings.value("309Settings/OperationalPeriodFrom","01/01/2026 12:00")
-        dt = QDateTime.fromString(tmp,date_time_format)
+        tmp = self.pd.settings.value("309Settings/OperationalPeriodFrom","2026-01-01T12:00:00")
+        dt = QDateTime.fromString(tmp,Qt.DateFormat.ISODate)
         self.c_operational_period_from.setDateTime(dt)
-        tmp = self.pd.settings.value("309Settings/OperationalPeriodTo","01/01/2026 12:00")
-        dt = QDateTime.fromString(tmp,date_time_format)
+        tmp = self.pd.settings.value("309Settings/OperationalPeriodTo","02026-01-01T12:00:00")
+        dt = QDateTime.fromString(tmp,Qt.DateFormat.ISODate)
         self.c_operational_period_to.setDateTime(dt)
         self.c_tactical_info.setText(self.pd.settings.value("309Settings/TacticalInfo",f"{self.pd.getTacticalCallSign("Name")} / {self.pd.getActiveTacticalCallSign()}"))
         self.c_user_info.setText(self.pd.settings.value("309Settings/UserInfo",f"{self.pd.getUserCallSign("Name")} / {self.pd.getActiveUserCallSign()}"))
@@ -33,16 +33,16 @@ class Ics309Builder(QMainWindow,Ui_Ics309Builder):
         range = self.pd.settings.value("309Settings/Range",0)
         if range < 0 or range > 3:
             range = 0
-        self.c_page1_today.setText(f"Today ({dt.toString("MM-dd-yyyy")})")
+        self.c_page1_today.setText(f"Today ({dt.toString("MM/dd/yyyy")})")
         self.c_page1_today.setChecked(range==0)
         self.c_page1_since_last.setChecked(range==1)
         self.c_page1_all.setChecked(range==2)
         self.c_page1_custom_range.setChecked(range==3)
-        tmp = self.pd.settings.value("309Settings/CustomRangeFrom","01/01/2026 12:00")
-        dt = QDateTime.fromString(tmp,date_time_format)
+        tmp = self.pd.settings.value("309Settings/CustomRangeFrom","2026-01-01T12:00:00")
+        dt = QDateTime.fromString(tmp,Qt.DateFormat.ISODate)
         self.c_page1_custom_range_from.setDateTime(dt)
-        tmp = self.pd.settings.value("309Settings/CustomRangeTo","01/01/2026 12:00")
-        dt = QDateTime.fromString(tmp,date_time_format)
+        tmp = self.pd.settings.value("309Settings/CustomRangeTo","2026-01-01T12:00:00")
+        dt = QDateTime.fromString(tmp,Qt.DateFormat.ISODate)
         self.c_page1_custom_range_to.setDateTime(dt)
         
         self.c_build_data_set.clicked.connect(self.on_build_data_set)
@@ -77,8 +77,8 @@ class Ics309Builder(QMainWindow,Ui_Ics309Builder):
     def save(self):
         self.pd.settings.setValue("309Settings/IncidentName",self.c_incident_name.text())
         self.pd.settings.setValue("309Settings/ActivationNumber",self.c_activation_number.text())
-        self.pd.settings.setValue("309Settings/OperationalPeriodFrom",self.c_operational_period_from.dateTime().toString(date_time_format))
-        self.pd.settings.setValue("309Settings/OperationalPeriodTo",self.c_operational_period_to.dateTime().toString(date_time_format))
+        self.pd.settings.setValue("309Settings/OperationalPeriodFrom",self.c_operational_period_from.dateTime().toString(Qt.DateFormat.ISODate))
+        self.pd.settings.setValue("309Settings/OperationalPeriodTo",self.c_operational_period_to.dateTime().toString(Qt.DateFormat.ISODate))
         self.pd.settings.setValue("309Settings/TacticalInfo",self.c_tactical_info.text())
         self.pd.settings.setValue("309Settings/UserInfo",self.c_user_info.text())
         if self.c_page1_today.isChecked():
@@ -91,8 +91,8 @@ class Ics309Builder(QMainWindow,Ui_Ics309Builder):
             self.pd.settings.setValue("309Settings/Range",3)
         else:
             self.pd.settings.setValue("309Settings/Range",0)
-        self.pd.settings.setValue("309Settings/CustomRangeFrom",self.c_page1_custom_range_from.dateTime().toString(date_time_format))
-        self.pd.settings.setValue("309Settings/CustomRangeTo",self.c_page1_custom_range_to.dateTime().toString(date_time_format))
+        self.pd.settings.setValue("309Settings/CustomRangeFrom",self.c_page1_custom_range_from.dateTime().toString(Qt.DateFormat.ISODate))
+        self.pd.settings.setValue("309Settings/CustomRangeTo",self.c_page1_custom_range_to.dateTime().toString(Qt.DateFormat.ISODate))
 
     def on_build_data_set(self):
         self.save()
@@ -110,8 +110,8 @@ class Ics309Builder(QMainWindow,Ui_Ics309Builder):
         elif range == 2: # all
             pass # just skips compare
         else:
-            dt0 = QDateTime.fromString(self.pd.settings.value("309Settings/CustomRangeFrom",""),date_time_format)
-            dt1 = QDateTime.fromString(self.pd.settings.value("309Settings/CustomRangeTo",""),date_time_format)
+            dt0 = QDateTime.fromString(self.pd.settings.value("309Settings/CustomRangeFrom",""),Qt.DateFormat.ISODate)
+            dt1 = QDateTime.fromString(self.pd.settings.value("309Settings/CustomRangeTo",""),Qt.DateFormat.ISODate)
         self.data.clear()
         try:
             with open("activity.log","rt",encoding="windows-1252") as file:
@@ -200,11 +200,19 @@ class f309(FPDF):
 
     @staticmethod
     def reformat_date(date:str) -> str:
-        return f"{date[5:7]}/{date[8:10]}/{date[0:4]} {date[11:16]}" if date else "MM/DD/YYYY HH:MM"
+        if date:
+            dt = QDateTime().fromString(date,Qt.DateFormat.ISODate)
+            return dt.toString("MM/dd/yyyy HH:mm")
+        else:
+            return "MM/DD/YYYY HH:MM"
 
     @staticmethod
     def reformat_date_noyear(date:str) -> str:
-        return f"{date[5:7]}/{date[8:10]} {date[11:16]}" if date else "MM/DD HH:MM"
+        if date:
+            dt = QDateTime().fromString(date,Qt.DateFormat.ISODate)
+            return dt.toString("MM/dd HH:mm")
+        else:
+            return "MM/DD HH:MM"
 
     def generate_blank_page(self,page:int,npages:int): # not quite blank, has headers and footers
         self.add_page()
@@ -221,10 +229,10 @@ class f309(FPDF):
         date0 = f309.reformat_date(date0)   
         date1 = f309.reformat_date(date1)   
         # now disregard all the work we just did and use operator-entered fields
-        tmp = self.pd.settings.value("309Settings/OperationalPeriodFrom","01/01/2026 12:00")
-        date0 = tmp # QDateTime.fromString(tmp,date_time_format)
-        tmp = self.pd.settings.value("309Settings/OperationalPeriodTo","01/01/2026 12:00")
-        date1 = tmp # QDateTime.fromString(tmp,date_time_format)
+        tmp = self.pd.settings.value("309Settings/OperationalPeriodFrom","2026/01/01T12:00:00")
+        date0 = f309.reformat_date(tmp) # QDateTime.fromString(tmp,Qt.DateFormat.ISODate)
+        tmp = self.pd.settings.value("309Settings/OperationalPeriodTo","2026/01/01T12:00:00")
+        date1 = f309.reformat_date(tmp) # QDateTime.fromString(tmp,Qt.DateFormat.ISODate)
 
 
         # first, all the lines

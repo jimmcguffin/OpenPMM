@@ -53,7 +53,7 @@
      </property>
     </widget>
    </widget>
-   <widget class="QPushButton" name="cSend">
+   <widget class="QPushButton" name="c_send">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -64,6 +64,19 @@
     </property>
     <property name="text">
      <string>Send</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="c_print">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>10</y>
+      <width>75</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Print</string>
     </property>
    </widget>
   </widget>

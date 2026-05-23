@@ -34,6 +34,9 @@
    <property name="textInteractionFlags">
     <set>Qt::TextInteractionFlag::NoTextInteraction</set>
    </property>
+   <property name="maximumBlockCount">
+    <number>2048</number>
+   </property>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>

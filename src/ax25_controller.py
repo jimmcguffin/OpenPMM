@@ -2,8 +2,10 @@ from collections import deque
 from datetime import datetime
 from enum import IntEnum
 
-import ax25
 from PySide6.QtCore import QObject, Signal, QTimer, qDebug
+import ax25
+
+from globalsignals import global_signals
 
 UNPROTO_PID = 0xf0
 
@@ -16,10 +18,11 @@ class AX25State(IntEnum):
     # not supported AWAITING_V2_2_CONNECTION = 5
 
 class AX25_Controller(QObject):
-    signal_bytes_ready = Signal(str) # I frame ready
+    signal_bytes_ready = Signal(bytes) # I frame ready
     signal_write = Signal(ax25.Frame) # sends to left
-    def __init__(self):
+    def __init__(self,pipeline):
         super().__init__()
+        self.pipeline = pipeline
         self.mycalls = ("","")
         self.bbscall = ""
         self.monitor_mode = False
@@ -60,21 +63,24 @@ class AX25_Controller(QObject):
         self.mycalls = mycalls
         self.bbscall = bbscall
         self.monitor_mode = False
-    # hi-level functions
+        global_signals.signal_connected.connect(self.onConnected)        
+        self.dl_connect_request()
 
+    def start_monitor_session(self):
+        self.mycalls = ("","")
+        self.bbscall = ""
+        self.monitor_mode = True
+    # hi-level functions
 
     def stop_session(self):
         # send IDENT if operating in tactical mode
-        super().stop_session()
-        if self.mycalls[0] != self.mycalls[1]:
-            msg = f"{self.mycall[1]} operating as {self.mycall[0]}"
+        if self.mycalls[0] and self.mycalls[0] != self.mycalls[1]:
+            msg = f"{self.mycalls[1]} operating as {self.mycalls[0]}"
             self.create_and_send_ident_frame(msg)
         global_signals.signal_status_bar_message.emit("")
-        self.signalDisconnected.emit()
 
 	# the next group of functions are called by the upper layer (slots using Qt terminology)
     def dl_connect_request(self):
-        self.bbscall = self.bbscall
         self.srt = 2000 # initial guess for t1 
         self.t1_v = self.srt * 2
         self.establish_data_link()
@@ -85,10 +91,13 @@ class AX25_Controller(QObject):
         pass
 		
     def dl_data_request(self,msg:bytes):
-        pass
-		
+        self.send(msg)
+
     def dl_unit_data_request(self,msg:bytes):
         pass
+
+    def on_write(self,msg:bytes):
+        self.send(msg)
 
     def on_t1_timeout(self):
         print(f"Timer 1 triggered at {datetime.now().strftime("%H:%M:%S.%f")}")
@@ -133,7 +142,7 @@ class AX25_Controller(QObject):
             return
         # only pay attention if this is for us
         frame = ax25.Frame.unpack(msg)
-        if frame.dst.call != self.mycall[0]:
+        if frame.dst.call != self.mycalls[0]:
             return
         # what we do next is dependent on our current state
         match(self.state):
@@ -199,6 +208,7 @@ class AX25_Controller(QObject):
                     self.t1.stop()
                     self.t2.stop()
                     #! select t1 value
+                    global_signals.signal_connected.emit()
                     return AX25State.CONNECTED
             case ax25.FrameType.SABME:
                 self.create_and_send_frame(ax25.FrameType.DM,False,control.poll_final)
@@ -314,7 +324,7 @@ class AX25_Controller(QObject):
                         self.vr = self.vr + 1
                         self.reject_exception = False
                         #! tell app we have data
-                        self.signal_bytes_ready.emit(frame.data.decode())
+                        self.signal_bytes_ready.emit(frame.data)
                         #while self.xx[self.vr]: #!!! don't understand this loop, looks through saved frames - must be related to SREJ
                         #    #! get self.xx[self.vr]
                         #    #! tell app we have it
@@ -513,11 +523,9 @@ class AX25_Controller(QObject):
 
     def onConnected(self):
         print("Connected!")
+        self.pipeline.add_bbs("[JNOS-2.0k.2.xsc.8-B1FHIM$]") #!! temporary, should pass the welcome message sent by the BBS
 
-    def onDisconnected(self):
-        print("TNC got disconnected!")
-        globals.signal_status_bar_message.emit("Resetting TNC")
- 
+
     def send(self,s:str): # these are ordinary strings, get sent as "I" frames
         # if too big, split
         while len(s) > self.n1:
@@ -540,7 +548,7 @@ class AX25_Controller(QObject):
     def create_and_send_frame(self,ft:ax25.FrameType,cr:bool=False,pf:bool=False,s:str=None):
         dst = ax25.Address(self.bbscall)
         dst.command_response = cr
-        src = ax25.Address(self.mycall[0])
+        src = ax25.Address(self.mycalls[0])
         src.command_response = not cr
         control = ax25.Control(ft)
         control.poll_final = pf
@@ -569,7 +577,7 @@ class AX25_Controller(QObject):
     def create_and_send_ident_frame(self,s:str):
         dst = ax25.Address("IDENT")
         dst.command_response = False
-        src = ax25.Address(self.mycall[0])
+        src = ax25.Address(self.mycalls[0])
         src.command_response = False
         control = ax25.Control(ax25.FrameType.UI)
         control.poll_final = False

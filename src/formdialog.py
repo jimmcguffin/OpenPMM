@@ -3,6 +3,7 @@ import re
 import sys
 
 from PySide6.QtCore import Qt, Signal, QObject, QRect, QPoint
+from PySide6.QtPrintSupport import QPrinter, QPrintDialog, QPrintPreviewDialog
 from PySide6.QtWidgets import QMainWindow, QLineEdit, QWidget, QPlainTextEdit, QCheckBox, QRadioButton, QButtonGroup, QComboBox, QFrame
 from PySide6.QtGui import QPixmap, QPalette, QColor, QFont, QPainter
 
@@ -82,7 +83,8 @@ class FormItem(QObject):
         self.group = -1 # gets set if part of a group
         # radio buttons and check boxes are never individually shown in red, just the groups that they are in
         # also, allg groups are never drawn, in that case the children are
-        if len(f[2]) and f[4] != "0" and not (f[1] == "rb:" or f[1] == "cb" or f[1] == "allg"):
+        #if len(f[2]) and f[4] != "0" and not (f[1] == "rb:" or f[1] == "cb" or f[1] == "allg"): #!!! this looks wrong to me, "rb:" should just be "rb"
+        if len(f[2]) and f[4] != "0" and not (f[1] == "rb" or f[1] == "cb" or f[1] == "allg"): #!!! see if this works
             self.validity_indicator = QFrame(parent)
             # expand the coordinates a litle
             e = 4
@@ -139,6 +141,15 @@ class FormItem(QObject):
     def include_in_output(self):
         return True
     
+    def print_(self,painter,scale): # cannot use "print" for your own functions
+        #if self.is_valid:
+        # this works for many types but not radio buttons on check boxes, they will override
+        r = self.widget.geometry()
+        # when printed, the chars touch the left edge so add a small margin
+        r.adjust(2,0,-2,0)
+        r.setRect(int(r.x()*scale),int(r.y()*scale),int(r.width()*scale),int(r.height()*scale))
+        painter.drawText(r,0,self.get_value())
+
     @staticmethod
     def partition_name_op_value(s:str):
         # the operator can only be "==" or "!=" (maybe allow "=")
@@ -182,6 +193,7 @@ class FormItemString(FormItem):
         s = self.get_value()
         return len(s) > 0
 
+       
 class FormItemDateString(FormItemString):
     def __init__(self,parent,form,f):
         super().__init__(parent,form,f)
@@ -194,6 +206,17 @@ class FormItemDateString(FormItemString):
             return True
         except ValueError:
             return False         
+
+    def print_(self,painter,scale):
+        # most of the forms say "MM/DD/YY" for the date, and the boxes are too small to fit the century, so let'e ignore the lessons we learned in Y2K
+        r = self.widget.geometry()
+        r.adjust(2,0,-2,0)
+        r.setRect(int(r.x()*scale),int(r.y()*scale),int(r.width()*scale),int(r.height()*scale))
+        d = self.get_value()
+        if len(d) == 10 and d[6:8] == "20":
+            d = d[:6] + d[8:]
+
+        painter.drawText(r,0,d)
 
 class FormItemTimeString(FormItemString):
     def __init__(self,parent,form,f):
@@ -275,6 +298,15 @@ class FormItemMultiString(FormItem):
     def set_value(self,value):
         return self.widget.setPlainText(value.replace("`]","]").replace("\\n","\n"))
 
+    def print_(self,painter,scale):
+        #if self.is_valid:
+        # this works for many types but not radio buttons on check boxes, they will override
+        r = self.widget.geometry()
+        # when printed, the chars touch the left edge so add a small margin
+        r.adjust(2,0,-2,0)
+        r.setRect(int(r.x()*scale),int(r.y()*scale),int(r.width()*scale),int(r.height()*scale))
+        painter.drawText(r,0,self.get_value().replace("\\n","\n"))
+
 
 class FormItemRadioButtons(FormItem): # always multiple buttons
     signalValidityCheck = Signal(FormItem)
@@ -298,6 +330,9 @@ class FormItemRadioButtons(FormItem): # always multiple buttons
             tmpwidget.setPalette(palette)
             self.values.append(f[j])
         self.widget.idClicked.connect(lambda: self.signalValidityCheck.emit(self))
+        # temporary hack, probably depends on resolution, will add before scaling to see if that works
+        self.set_print_x_adjust = 3
+        self.set_print_y_adjust = 12.5
 
     def get_value(self):
         # this does not work when the initial seletion is made using setChecked
@@ -317,6 +352,26 @@ class FormItemRadioButtons(FormItem): # always multiple buttons
             return True
         return False
 
+    def print_(self,painter,scale):
+        for index, b in enumerate(self.widget.buttons()):
+            if b.isChecked():
+                r = self.widget.button(index).geometry()
+                x = r.x()+self.set_print_x_adjust
+                y = r.y()+self.set_print_y_adjust
+                if True:
+                    painter.drawText(QPoint(int(x*scale),int(y*scale)),"X")
+                else:
+                    # manually draw big X 
+                    # this needs work, not ready for use
+                    s = int(10*scale) # size (len from center on the diagonal)
+                    t = int(1.0*scale)  # thickness
+                    xc = int(x*scale)
+                    yc = int(y*scale)
+                    for i in range(-t,t+1):
+                        i2 = i * 0.707
+                        painter.drawLine(xc-s+i2,yc+s+i2,xc+s+i2+1,yc-s+i2-1)
+                        painter.drawLine(xc+s+i2,yc+s-i2,xc-s+i2-1,yc-s-i2-1)
+
 class FormItemCheckBox(FormItem):
     signalValidityCheck = Signal(FormItem)
     def __init__(self,parent,form,f):
@@ -332,6 +387,9 @@ class FormItemCheckBox(FormItem):
         palette.setColor(QPalette.ColorRole.Text,QColor("blue"))
         self.widget.setPalette(palette)
         self.widget.clicked.connect(lambda: self.signalValidityCheck.emit(self))
+        # temporary hack, probably depends on resolution, will add before scaling to see if that works
+        self.set_print_x_adjust = 3
+        self.set_print_y_adjust = 12.5
 
     def get_value(self):
         return "checked" if self.widget.isChecked() else ""
@@ -341,6 +399,12 @@ class FormItemCheckBox(FormItem):
             value = True
         return self.widget.setChecked(value)
 
+    def print_(self,painter,scale):
+        if self.get_value():
+            r = self.widget.geometry()
+            x = r.x()+self.set_print_x_adjust
+            y = r.y()+self.set_print_y_adjust
+            painter.drawText(QPoint(int(x*scale),int(y*scale)),"X")
 
 class FormItemDropDown(FormItem):
     signalValidityCheck = Signal(FormItem)
@@ -366,7 +430,6 @@ class FormItemDropDown(FormItem):
 
     def set_value(self,value):
         return self.widget.setCurrentText(value)
-
 
 # this class returns valid if any child item is valid
 class FormItemAnyGroup(FormItem):
@@ -569,7 +632,8 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
                 self.set_value_by_id("OpName",self.pd.getUserCallSign("Name"))
                 self.set_value_by_id("Method","Other")
                 self.set_value_by_id("Other","Packet")
-            self.cSend.clicked.connect(self.onSend)
+            self.c_send.clicked.connect(self.on_send)
+            self.c_print.clicked.connect(self.on_print)
         self.updateAll()
 
     def resizeEvent(self,event):
@@ -584,7 +648,7 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
         assert(self.pages)
         tmp = QPixmap(self.pages[0][0])
         w = tmp.width()
-        self.scale = 850/w
+        self.scale = 850/w if w else 0.0
 
 
     def make_composite_picture(self):
@@ -689,7 +753,7 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
             return self.fields[self.fieldid[fname]].is_valid()
         return ""
 
-    def onSend(self):
+    def on_send(self):
         # checkincheckout is completely different than any other
         if self.form == "CheckInCheckOut.desc":
             handling = "R"
@@ -721,3 +785,40 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
             subject = self.get_value_by_id("MsgNo") + "_" + handling[0] + "_" + self.formid + "_" + self.get_value_by_id(self.subjectlinesource) 
         global_signals.signal_new_outgoing_form_message.emit(subject,message,handling[0] == 'I',self.to_addr)
         self.close()
+
+    def on_print(self):
+        printer = QPrinter(QPrinter.PrinterMode.HighResolution)
+        printer.setFullPage(True)
+        printer.setOutputFormat(QPrinter.OutputFormat.NativeFormat)  # Or QPrinter.PdfFormat
+        printer.setDocName("Example Document")
+
+        d = QPrintPreviewDialog(printer)
+        d.paintRequested.connect(self.print_form)
+        #if QPrintPreviewDialog(printer).exec() == QPrintDialog.Accepted:
+        if d.exec() == QPrintDialog.Accepted:
+            self.print_form(printer)
+
+
+
+    def print_form(self,printer):
+        dpi = printer.logicalDpiX() # 600 on the printer I am using
+        form_dpi = 100 # all x/y/w/h values are in 100ths of an inch
+        target_dpi = 300 # we are aiming for 300dpi for printing
+        #target_w = int(8.5*target_dpi)
+        #target_h = int(11.0*target_dpi)
+        painter = QPainter(printer)
+        assert(self.pages)
+        scale = dpi/form_dpi
+        font = QFont()
+        font.setBold(True)
+        font.setPointSize(font.pointSize()*5//4) # make it a little bigger
+        painter.setFont(font)
+
+        for index,page in enumerate(self.pages):
+            # figure out if this page should be printed based on operator settings
+            pm2 = QPixmap(page[0])
+            painter.drawPixmap(QRect(0,0,printer.width(),printer.height()),pm2,QRect(0,0,pm2.width(),pm2.height()))
+            for f in self.fields:
+                if f.page == index:
+                    f.print_(painter,scale)
+        painter.end()

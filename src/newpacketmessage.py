@@ -33,7 +33,7 @@ class NewPacketMessage(QMainWindow,Ui_NewPacketMessageClass):
         self.cUrgent.setChecked(mbh.flags & MailFlags.IS_URGENT.value)
 
     def resizeEvent(self,event):
-        self.cMessage.resize(event.size().width()-20,event.size().height()-50)
+        self.cMessage.resize(event.size().width()-20,event.size().height()-180)
         return super().resizeEvent(event)
 
     def setInitialData(self,subject,message,urgent=False,to_addr=""):

@@ -5,8 +5,9 @@ import datetime
 
 from PySide6.QtCore import QObject, Signal
 
-from sql_mailbox import MailBox, MailBoxHeader, MailFlags
+#from pipeline import Pipeline
 from globalsignals import global_signals
+from sql_mailbox import MailBox, MailBoxHeader, MailFlags
 
 # the general sequence is:
 # send the startup commands
@@ -50,33 +51,31 @@ class BbsParser(QObject):
     signalTimeout = Signal()
     signalDisconnected = Signal()
     signalOutgingMessageSent= Signal()
-    signal_status_bar_message = Signal(str)
-    def __init__(self,pd,using_echo,parent=None):
-        super().__init__(parent)
+    signal_write = Signal(str)
+    def __init__(self,pd,using_echo):
+        super().__init__()
         self.pd = pd
+        self.pipeline = None
         self.bbs_sequence = deque() # a list of BbsSequenceSteps (and similar)
         self.bbs_pending = deque() # a list of BbsSequenceSteps that are awaiting a response
         self.messages_to_be_killed = []
         self.messages_to_be_acknowledged = []
-        self.tnc_device = None # later will be set to a TncDevice
         self.using_echo = using_echo
         self.srflags = 0
         self.sendimmediate = []
 
-    def start_session(self,tnc,mailbox,srflags:int,sendimmediate:[int]=None):
-        self.tnc_device = tnc
-        self. mailbox = mailbox
+    def start_session(self,pipeline,mailbox,srflags:int,sendimmediate:[int]=None):
+        self.pipeline = pipeline
+        self.mailbox = mailbox
         self.srflags = srflags
         self.sendimmediate = sendimmediate
         self.bbs_sequence.clear()
         self.bbs_pending.clear
-        self.tnc_device.set_line_end(b") >\r\n") # this matches what the original Outpost uses, does not work if TNC is set for long prompts ("Z >\r\n" would be work)
-        self.tnc_device.set_include_line_end_in_reply(True)
-        global_signals.signal_line_read.connect(self.on_response)
-        global_signals.signal_disconnected.connect(self.on_disconnected)
-        self.signal_status_bar_message.emit("Initializing the BBS")
+        self.pipeline.set_line_end(b") >\r\n",True) # this matches what the original Outpost uses, does not work if TNC is set for long prompts ("Z >\r\n" would be work)
+        #global_signals.signal_disconnected.connect(self.on_disconnected)
+        global_signals.signal_status_bar_message.emit("Initializing the BBS")
 
-    def end_session(self):
+    def stop_session(self):
         self.bbs_sequence.clear() # forget any unfinished business
         self.bbs_pending.clear()
         print("BBS emitting disconnect")
@@ -127,11 +126,11 @@ class BbsParser(QObject):
                 self.bbs_sequence.popleft()
                 self.bbs_pending.append(step)
                 if step.what_to_send:
-                    self.tnc_device.send(step.what_to_send)
+                    self.signal_write.emit(step.what_to_send)
             elif isinstance(step,BbsSequenceStepNoResponse):
                 self.bbs_sequence.popleft()
                 if step.what_to_send:
-                    self.tnc_device.send(step.what_to_send)
+                    self.signal_write.emit(step.what_to_send)
             elif isinstance(step,BbsSequenceSync):
                 if self.bbs_pending:
                     if debug_sequence: self.dump_sequence("cs-after:")
@@ -142,16 +141,17 @@ class BbsParser(QObject):
 
     def on_disconnected(self):
         print("BBS got disconnected")
-        self.end_session()
+        self.stop_session()
 
 class Jnos2Parser(BbsParser):
-    def __init__(self,pd,using_echo,parent=None):
-        super().__init__(pd,using_echo,parent)
+    def __init__(self,pd,using_echo):
+        super().__init__(pd,using_echo)
         self.home_area = self.pd.getActiveCallSign(False).upper()
         self.current_area = ""
         self.areas_to_read = []
-    def start_session(self,tnc,mailbox,srflags,sendimmediate):
-        super().start_session(tnc,mailbox,srflags,sendimmediate)
+
+    def start_session(self,pipeline,mailbox,srflags,sendimmediate):
+        super().start_session(pipeline,mailbox,srflags,sendimmediate)
         self.add_step(BbsSequenceStep("",self.start_session2)) # there is a prompt/terminator that will arrive without being told
 
     def start_session2(self,r,_=None):
@@ -189,7 +189,7 @@ class Jnos2Parser(BbsParser):
         else:
             indexes = self.mailbox.get_header_indexes(MailFlags.FOLDER_OUT_TRAY)
         if indexes:
-            self.signal_status_bar_message.emit("Sending out messages")
+            global_signals.signal_status_bar_message.emit("Sending out messages")
             for index in indexes:
                 mbh,m = self.mailbox.get_message(index)
                 m2 = m.replace("\r\n","\r").replace("\n","\r") # make sure there are no linefeeds
@@ -210,7 +210,7 @@ class Jnos2Parser(BbsParser):
     #         # this must be a send-only cycle, so skip list/read/confirm steps
 
 
-    def on_response(self,r):
+    def on_bytes_ready(self,r):
         if not self.bbs_pending:
             return # nothing expected
         # this is probably/hopefully the response to the front element
@@ -335,7 +335,7 @@ class Jnos2Parser(BbsParser):
     def send_confirmations(self,_=None):
         if not self.messages_to_be_acknowledged:
             return
-        self.signal_status_bar_message.emit("Sending delivery confirmations")
+        global_signals.signal_status_bar_message.emit("Sending delivery confirmations")
         d = datetime.datetime.now()
         date = "{:%m/%d/%Y}".format(d)
         time = "{:%H:%M}".format(d)

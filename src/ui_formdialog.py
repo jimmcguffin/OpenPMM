@@ -37,9 +37,12 @@ class Ui_FormDialogClass(object):
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
         self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 868, 828))
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
-        self.cSend = QPushButton(self.centralWidget)
-        self.cSend.setObjectName(u"cSend")
-        self.cSend.setGeometry(QRect(10, 10, 75, 30))
+        self.c_send = QPushButton(self.centralWidget)
+        self.c_send.setObjectName(u"c_send")
+        self.c_send.setGeometry(QRect(10, 10, 75, 30))
+        self.c_print = QPushButton(self.centralWidget)
+        self.c_print.setObjectName(u"c_print")
+        self.c_print.setGeometry(QRect(90, 10, 75, 30))
         FormDialogClass.setCentralWidget(self.centralWidget)
 
         self.retranslateUi(FormDialogClass)
@@ -48,6 +51,7 @@ class Ui_FormDialogClass(object):
     def retranslateUi(self, FormDialogClass):
         FormDialogClass.setWindowTitle(QCoreApplication.translate("FormDialogClass", u"FormDialog", None))
         self.cForm.setText(QCoreApplication.translate("FormDialogClass", u"TextLabel", None))
-        self.cSend.setText(QCoreApplication.translate("FormDialogClass", u"Send", None))
+        self.c_send.setText(QCoreApplication.translate("FormDialogClass", u"Send", None))
+        self.c_print.setText(QCoreApplication.translate("FormDialogClass", u"Print", None))
     # retranslateUi
 
