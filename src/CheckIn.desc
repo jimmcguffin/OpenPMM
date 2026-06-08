@@ -1,0 +1,14 @@
+[Headers]
+
+[Footers]
+
+[Pages]
+CheckIn.png
+
+[Fields]
+MsgNo,str,Y,P1,265,51,160,21
+UserCall,str,Y,P1,155,93,98,20
+UserName,str,Y,P1,557,93,247,20
+TacticalCall,str,,P1,155,118,98,20
+TacticalName,str,,P1,557,118,247,20
+

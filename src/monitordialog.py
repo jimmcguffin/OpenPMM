@@ -55,52 +55,128 @@ class MonitorDialog(QDialog,Ui_MonitorDialogClass):
             line += f", n(r)={control.recv_seqno}"
         line += f", p={1 if control.poll_final else 0}"
         # handle APRS specially
-        if ft is ax25.FrameType.UI and frame.data and frame.data[:1] in {b'!',b'=',b'@',b'/'}:
-            symbol_table_id = " "
-            symbol_code = " "
-            tm = "000000z"
-            lat = "0000.00N"
-            lon = "00000.00W"
-            spos = 1
-            if frame.data[:1] == b'!' or frame.data[:1] == b'=':
-                pass
-            else: # frame.data[:1] == b'@' or frame.data[:1] == b'/':
-                tm = frame.data[spos:spos+len(tm)]
-                spos += len(tm)
-            firstchar = ord(frame.data[spos:spos+1])
-            if firstchar >= ord('0') and firstchar <= ord('9'): # digits means uncompressed
-                lat = frame.data[spos:spos+len(lat)]
-                spos += len(lat)
-                symbol_table_id = frame.data[spos:spos+len(symbol_table_id)]
-                spos += len(symbol_table_id)
-                lon = frame.data[spos:spos+len(lon)]
-                spos += len(lon)
-                latf = int(lat[0:2]) + float(lat[2:7])/60.0
-                if lat[7:8] == b'S':
-                    latf = -latf
-                lonf = int(lon[0:3]) + float(lon[3:8])/60.0
-                if lon[8:9] == b'W':
-                    lonf = -lonf
+        if ft is ax25.FrameType.UI:
+            if frame.data and frame.data[:1] in {b'!',b'=',b'@',b'/'}:
+                symbol_table_id = " "
+                symbol_code = " "
+                tm = "000000z"
+                lat = "0000.00N"
+                lon = "00000.00W"
+                spos = 1
+                if frame.data[:1] == b'!' or frame.data[:1] == b'=':
+                    pass
+                else: # frame.data[:1] == b'@' or frame.data[:1] == b'/':
+                    tm = frame.data[spos:spos+len(tm)]
+                    spos += len(tm)
+                firstchar = ord(frame.data[spos:spos+1])
+                if firstchar >= ord('0') and firstchar <= ord('9'): # digits means uncompressed
+                    lat = frame.data[spos:spos+len(lat)]
+                    spos += len(lat)
+                    symbol_table_id = frame.data[spos:spos+len(symbol_table_id)]
+                    spos += len(symbol_table_id)
+                    lon = frame.data[spos:spos+len(lon)]
+                    spos += len(lon)
+                    latf = int(lat[0:2]) + float(lat[2:7])/60.0
+                    if lat[7:8] == b'S':
+                        latf = -latf
+                    lonf = int(lon[0:3]) + float(lon[3:8])/60.0
+                    if lon[8:9] == b'W':
+                        lonf = -lonf
+                else:
+                    symbol_table_id = frame.data[spos:spos+len(symbol_table_id)]
+                    spos += len(symbol_table_id)
+                    latf = 90.0 - self.base91_decode(frame.data[spos:spos+4])/380926
+                    spos += 4
+                    lonf = 180.0 + self.base91_decode(frame.data[spos:spos+4])/190463
+                    if lonf >= 180.0:
+                        lonf = lonf - 360.0
+                    spos += 4
+                line += f", loc={latf:.4f},{lonf:.4f}) {frame.data}"
+            elif frame.data and len(frame.data) >= 9 and frame.data[:1] in {b"'",b"`"}:
+                latf,lonf,text = MonitorDialog.decode_mic_e(frame.dst.call,frame.data)
+                line += f", MIC-E loc={latf:.4f},{lonf:.4f}) {frame.data}"
             else:
-                symbol_table_id = frame.data[spos:spos+len(symbol_table_id)]
-                spos += len(symbol_table_id)
-                latf = 90.0 - self.base91_decode(frame.data[spos:spos+4])/380926
-                spos += 4
-                lonf = 180.0 + self.base91_decode(frame.data[spos:spos+4])/190463
-                if lonf >= 180.0:
-                    lonf = lonf - 360.0
-                spos += 4
-            line += f", loc={latf:.4f},{lonf:.4f}) {frame.data}"
+                line += f") {frame.data}"
         elif ft is ax25.FrameType.I or ft is ax25.FrameType.UI:
             line += f", pid={frame.pid:02X}, len={len(frame.data)}) {frame.data}"
         else:
-            line += ")"
+            line += f") {frame.data}"
         vbar = self.c_text.verticalScrollBar()
         was_at_end = (vbar.value() == vbar.maximum())
         self.c_text.appendPlainText(line)
         if not was_at_end:
             vbar.setValue(vbar.maximum())
     
+    staticmethod
+    def decode_mic_e(dst:str,data:bytes): # turns latf,lonf, str
+        lat = ""
+        lon = ""
+        text = ""
+        # MIC-E report
+        ld = 0
+        lm = 0
+        lh = 0
+        ns = True # true is north
+        ew = True # true east
+        lo = False
+        isstd = False
+        iscustom = False
+        msg = 0
+        for i in range(6):
+            abc = 0
+            c = dst[i]
+            if '0' <= c <= '9':
+                lat += c
+                abc = 0
+            elif 'A' <= c <= 'J':
+                lat += chr(ord('0')+ord(c)-ord('A'))
+                iscustom = True
+                abc = 1
+            elif 'P' <= c <= 'Y':
+                lat += chr(ord('0')+ord(c)-ord('P'))
+                isstd= True
+                abc = 1
+            elif c in ('K','L','Z'):
+                lat += " "
+            if i < 3:
+                msg = (msg<<1) + abc
+            elif i == 3:
+                ns = c >= 'P'
+            elif i == 4:
+                lo = c >= 'P'
+            elif i == 5:
+                ew = c < 'P'
+        text += " " + lat
+        if msg == 0:
+            text += " EMERGENCY"
+        elif isstd:
+            text += f" M{7-msg}"
+        elif iscustom:
+            text += f" C{7-msg}"
+        if len(data) >= 9 and data[0:1] in (b"'",b"`",b"\x1c",b"\x1d"):
+            ld = data[1] - 28
+            if lo:
+                ld += 100
+            if 180 <= ld <= 189:
+                ld -= 80
+            elif 190 <= ld <= 199:
+                ld -= 190
+            lm = data[2] - 28
+            if lm >= 60:
+                lm -= 60
+            lh = data[3] - 28
+
+            sp28 = data[4]
+            dc28 = data[5]
+            se28 = data[6]
+        latf = int(lat[0:2]) + float(lat[2:7])/6000.0
+        if not ns:
+            latf = -latf
+        lonf = ld + (lm*100+lh)/6000.0
+        if not ew:
+            lonf = -lonf
+        return (latf,lonf,text)
+
     @staticmethod
     def base91_decode(b:bytes) -> float:
         assert(len(b) == 4)

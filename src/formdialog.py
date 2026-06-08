@@ -616,12 +616,11 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
             subject = self.pd.make_standard_subject() if self.pd else ""
             self.set_value_by_id("MsgNo",subject)
             # special handing for this non-conforming form
-            if self.form == "CheckInCheckOut.desc":
+            if self.form == "CheckIn.desc" or self.form == "CheckOut.desc":
                 self.set_value_by_id ("UserCall",self.pd.getActiveUserCallSign())
                 self.set_value_by_id("UserName",self.pd.getUserCallSign("Name"))
                 self.set_value_by_id("TacticalCall",self.pd.getActiveTacticalCallSign())
                 self.set_value_by_id("TacticalName",self.pd.getTacticalCallSign("Name"))
-                self.set_value_by_id("UseTacticalCall",self.pd.getProfileBool("UseTacticalCallSign"))
             else:
                 d = datetime.datetime.now()
                 self.set_value_by_id("1a.","{:%m/%d/%Y}".format(d))
@@ -755,11 +754,14 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
 
     def on_send(self):
         # checkincheckout is completely different than any other
-        if self.form == "CheckInCheckOut.desc":
+        if self.form == "CheckIn.desc" or self.form == "CheckOut.desc":
             handling = "R"
-            line1 = self.get_value_by_id("Type") + " "
+            if self.form == "CheckIn.desc":
+                line1 = "Check-In  "
+            else:
+                line1 = "Check-Out "
             line2 = ""
-            usetactical = True if self.get_value_by_id("UseTacticalCall") else False
+            usetactical = True if self.get_value_by_id("TacticalCall") else False
             if usetactical:
                 line1 += self.get_value_by_id("TacticalCall") + ",  " + self.get_value_by_id("TacticalName")
                 line2 = self.get_value_by_id("UserCall") + " , " + self.get_value_by_id("UserName")

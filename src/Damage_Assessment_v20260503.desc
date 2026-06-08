@@ -1,0 +1,51 @@
+[Headers]
+!SCCoPIFO!
+#T: form-damage-assessment.html
+#V: 4.0-1.1
+[Footers]
+!/ADDON!
+
+[Pages]
+Damage_Assessment_v20260503.png
+
+[Fields]
+MsgNo,str,,P1,327,88,101,23
+1a.,dstr,Y,P1,116,162,77,20
+1b.,tstr,Y,P1,262,162,64,20
+5.,rb,Y,P1,414,159,380,26,IMMEDIATE,429,170,0,0,PRIORITY,565,170,0,0,ROUTINE,678,170,0,0
+7a.,dd,Y,P1,204,188,207,24,Damage/Safety Assessment Group,Construction & Eng. Branch,Operations
+8a.,str,Y,P1,569,188,213,24
+7b.,str,Y,P1,204,214,207,24
+8b.,str,Y,P1,569,214,213,24
+7c.,str,,P1,204,241,207,20
+8c.,str,,P1,569,241,213,20
+7d.,str,,P1,204,267,207,20
+8d.,str,,P1,569,267,213,20
+20.,dd,Y,P1,198,323,219,20,Campbell,Cupertino,Gilroy,Los Altos,Los Altos Hills,Los Gatos,Milpitas,Monte Sereno,Morgan Hill,Mountain View,Palo Alto,San Jose,Santa Clara (City),Saratoga,Sunnyvale,Santa Clara County,County unincorporated
+21.,str,Y,P1,548,323,235,17
+*22.,str,Y,P1,198,349,219,18
+23.,str,,P1,548,349,235,17
+24.,rb,Y,P1,198,371,442,41,Single Family,216,381,0,0,Mobile Home,366,381,0,0,Non-Profit Orgs,516,381,0,0,Multi-Family,216,403,0,0,Business,366,403,0,0,Outbuilding,516,403,0,0
+25.,nstr,Y,P1,211,437,566,18
+26.,rb,,P1,201,461,271,20,Own,216,471,0,0,Rent,415,471,0,0
+27.,anyg,Y,P1,206,482,453,46
+27a.,cb,27.,P1,216,495,0,0
+27b.,cb,27.,P1,217,516,0,0
+27c.,cb,27.,P1,467,494,0,0
+27d.,cb,27.,P1,467,516,0,0
+28.,rb,Y,P1,199,528,412,43,Basement,216,540,0,0,Crawlspace,216,560,0,0,Basement and Crawlspace,465,539,0,0,N/A,465,559,0,0
+29.,rb,Y,P1,146,590,516,46,Destroyed,166,602,0,0,Major,166,624,0,0,Minor,316,601,0,0,Affected,316,624,0,0,No Visible Damage,516,602,0,0
+30.,rb,,P1,146,637,412,23,Green,166,648,0,0,Yellow,316,647,0,0,Red,517,648,0,0
+31.,rb,,P1,155,662,153,22,Yes,167,672,0,0,No,266,672,0,0
+32.,nstr,,P1,599,664,183,18
+33.,mstr,,P1,160,690,622,86
+34.,str,Y,P1,181,792,240,20
+35.,pstr,Y,P1,566,792,214,20
+OpRelayRcvd,str,,P1,157,856,259,20
+OpRelaySent,str,,P1,496,856,292,20
+OpName,str,,P1,101,883,227,20
+OpCall,str,,P1,397,883,111,20
+OpDate,dstr,,P1,555,883,74,20
+OpTime,tstr,,P1,708,883,79,20
+// see the ICS213 file for a description of these lines
+// these must come before the items they control

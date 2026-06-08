@@ -8,6 +8,7 @@ from globalsignals import global_signals
 import ax25
 from PySide6.QtCore import QObject, Signal, QIODevice
 from PySide6.QtNetwork import QUdpSocket
+from PySide6.QtSerialPort import QSerialPort
 
 class Level1(QObject):
     signal_bytes_ready = Signal(bytes) # one or more bytes ready to read from io device
@@ -30,6 +31,10 @@ class Level1(QObject):
             if not isinstance(self.io_device,QUdpSocket): # they do not need to be closed
                 self.io_device.close()
             self.io_device.readyRead.disconnect()
+
+    def flush(self) -> None:
+        if isinstance(self.io_device,QSerialPort):
+            self.io_device.flush()
 
     def on_device_read_ready(self) -> None:
         sdata = bytearray(self.io_device.readAll())

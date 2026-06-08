@@ -6,7 +6,7 @@ from enum import IntEnum
 
 
 import ax25
-from ax25_controller import AX25_Controller
+from ax25v20_controller import AX25_Controller
 from bbsparser import Jnos2Parser
 from globalsignals import global_signals
 from serialstream import Level1

@@ -1,0 +1,77 @@
+// I had to use // for comments since some fields start with "#"
+
+[Headers]
+!SCCoPIFO!
+#T: form-cpod-commodities.html
+#V: 4.0-1.1
+
+[Footers]
+!/ADDON!
+
+[Pages]
+CPOD_Commodities_v20260506.png
+
+[Fields]
+MsgNo,str,,P1,330,91,148,22
+1a.,dstr,Y,P1,109,158,70,22
+1b.,tstr,Y,P1,263,158,65,22
+5.,rb,Y,P1,408,157,375,28,IMMEDIATE,430,170,0,0,PRIORITY,564,171,0,0,ROUTINE,677,171,0,0
+7a.,dd,Y,P1,198,188,217,24,CPOD Unit,Mass Care & Emerg. Asst. Branch,Operations
+8a.,str,Y,P1,561,188,220,24
+7b.,str,Y,P1,198,215,217,24
+8b.,str,Y,P1,561,215,220,24
+7c.,str,,P1,198,242,217,20
+8c,str,,P1,561,242,220,20
+7d.,str,,P1,198,267,217,20
+8d.,str,,P1,561,267,220,20
+20.,dd,,P1,186,323,596,20,Campbell,Cupertino,Gilroy,Los Altos,Los Altos Hills,Los Gatos,Milpitas,Monte Sereno,Morgan Hill,Mountain View,Palo Alto,San Jose,Santa Clara (City),Saratoga,Sunnyvale,Santa Clara County,County unincorporated
+21d.,dstr,Y,P1,186,349,70,18
+21t.,tstr,Y,P1,551,349,60,18
+*30.,str,Y,P1,154,399,628,18
+31,rb,Y,P1,197,423,531,38,Activated,215,431,0,0,Pending Activation,215,453,0,0,Pending Demobilization,415,431,0,0,Demobilization,415,453,0,0,Not Activated,615,431,0,0
+70.,allg,,P1,273,530,508,46
+70a.,str,70.,P1,291,532,487,18
+70b.,nstr,70.,P1,277,557,66,18
+70c.,nstr,70.,P1,493,557,70,18
+70d.,nstr,70.,P1,707,557,70,18
+71.,allg,,P1,273,583,508,46
+71a.,str,71.,P1,291,583,487,18
+71b.,nstr,71.,P1,277,608,66,18
+71c.,nstr,71.,P1,493,608,70,18
+71d.,nstr,71.,P1,707,608,70,18
+72.,allg,,P1,273,633,508,46
+72a.,str,72.,P1,291,635,487,18
+72b.,nstr,72.,P1,277,660,66,18
+72c.,nstr,72.,P1,493,660,70,18
+72d.,nstr,72.,P1,707,660,70,18
+73.,allg,,P1,273,688,508,46
+73a.,str,73.,P1,291,686,487,18
+73b.,nstr,73.,P1,277,711,66,18
+73c.,nstr,73.,P1,493,711,70,18
+73d.,nstr,73.,P1,707,711,70,18
+74.,allg,,P1,273,738,508,46
+74a.,str,74.,P1,291,738,487,18
+74b.,nstr,74.,P1,277,763,66,18
+74c.,nstr,74.,P1,493,763,70,18
+74d.,nstr,74.,P1,707,763,70,18
+75.,allg,,P1,273,788,508,46
+75a.,str,75.,P1,291,789,487,18
+75b.,nstr,75.,P1,277,814,66,18
+75c.,nstr,75.,P1,493,814,70,18
+75d.,nstr,75.,P1,707,814,70,18
+76.,allg,,P1,273,843,508,46
+76a.,str,76.,P1,291,841,487,18
+76b.,nstr,76.,P1,277,866,66,18
+76c.,nstr,76.,P1,493,866,70,18
+76d.,nstr,76.,P1,707,866,70,18
+77.,allg,,P1,273,893,508,46
+77a.,str,77.,P1,291,892,487,18
+77b.,nstr,77.,P1,277,917,66,18
+77c.,nstr,77.,P1,493,917,70,18
+77d.,nstr,77.,P1,707,917,70,18
+OpRelayRcvd,str,,P1,177,976,244,20
+OpRelaySent,str,,P1,497,976,247,20
+OpName,str,,P1,102,1002,160,20
+OpCall,str,,P1,336,1002,70,20
+OpDate,dstr,,P1,464,1002,70,20
+OpTime,tstr,,P1,684,1002,60,20

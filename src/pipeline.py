@@ -1,6 +1,6 @@
 from PySide6.QtCore import QObject
 
-from ax25_controller import AX25_Controller
+from ax25v20_controller import AX25_Controller
 from bbsparser import Jnos2Parser
 from serialstream import Level1,LineParser,KissParser
 from tncparser import TAPR_Device
@@ -103,6 +103,7 @@ class KISS_Pipeline(Pipeline):
         self.kiss_parser.signal_bytes_ready.connect(self.ax25_controller.on_bytes_ready)
         self.ax25_controller.signal_bytes_ready.connect(self.line_parser.on_bytes_ready)
         self.ax25_controller.signal_write.connect(self.kiss_parser.on_write)
+        self.ax25_controller.signal_connected.connect(self.on_connect)
         self.kiss_parser.signal_write.connect(self.l1.write)
 
     def start_session(self,mycalls:tuple[str,str],bbscall:str,mailbox,srflags:int,sendimmediate:list[int]=None):
@@ -111,6 +112,9 @@ class KISS_Pipeline(Pipeline):
 
     def start_monitor_session(self):
         self.ax25_controller.start_monitor_session()
+    
+    def on_connect(self):
+        self.add_bbs("[JNOS-2.0")
 
     def add_bbs(self,bbs_id:str):
         self.bbs = None

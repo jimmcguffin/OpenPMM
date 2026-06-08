@@ -3,41 +3,39 @@
 [Headers]
 !SCCoPIFO!
 #T: form-ics213.html
-#V: 3.20-2.2
+#V: 4.0-2.3
 
 [Footers]
 !/ADDON!
 
 [Pages]
-ICS-213_Message_Form_v20220119.png
+XSC_ICS-213_v20260512.png
 
 [Fields]
-MsgNo,str,Y,P1,446,49,94,25
-1a.,dstr,Y,P1,65,160,88,27
-1b.,tstr,Y,P1,196,159,64,27
-5.,rb,Y,P1,412,104,402,23,IMMEDIATE,422,116,0,0,PRIORITY,571,115,0,0,ROUTINE,706,115,0,0
-6a.,rb,,P1,574,161,183,23,Yes,584,172,0,0,No,725,172,0,0
-6b.,rb,,P1,574,190,183,23,Yes,584,200,0,0,No,725,200,0,0
-6d.,str,6b.=Yes,P1,641,191,62,18
-7.,dd,Y,P1,83,233,313,26,Radio Operators
-8.,dd,Y,P1,469,233,320,26,Preparedness Specialist
-9a.,dd,Y,P1,83,282,313,27,Santa Clara County
-9b.,dd,Y,P1,469,282,319,27,Sunnyvale EOC
-ToName,str,,P1,83,332,313,25
-FmName,str,,P1,469,332,319,25
-ToTel,pstr,,P1,83,381,313,27
-FmTel,pstr,,P1,469,381,319,27
-*10.,str,Y,P1,157,415,633,27
-11.,str,,P1,357,449,430,28
-12.,mstr,Y,P1,52,505,756,173
-OpRelayRcvd,str,,P1,177,824,244,18
-OpRelaySent,str,,P1,527,824,242,18
-OpCall,str,,P1,583,850,222,26
-OpName,str,,P1,564,885,235,21
-Method,rb,,P1,47,882,376,82,Telephone,58,893,0,0,EOC Radio,58,924,0,0,Amateur Radio,58,948,0,0,Dispatch Center,196,893,0,0,FAX,196,924,0,0,Other,196,948,0,0,Courier,302,924,0,0
-Other,str,Method=Other,P1,258,936,144,20
-OpDate,str,,P1,489,936,83,27
-OpTime,str,,P1,689,936,62,27
+MsgNo,str,Y,P1,321,84,94,25
+1a.,dstr,Y,P1,110,141,73,24
+1b.,tstr,Y,P1,256,137,64,24
+5.,rb,Y,P1,412,142,377,23,IMMEDIATE,423,153,0,0,PRIORITY,568,152,0,0,ROUTINE,698,152,0,0
+6a.,rb,,P1,379,296,128,23,Yes,397,308,0,0,No,450,309,0,0
+6b.,rb,,P1,379,327,128,28,Yes,396,339,0,0,No,451,339,0,0
+6d.,str,6b.=Yes,P1,621,328,162,24
+7.,dd,Y,P1,188,173,223,24,Radio Operators
+8.,dd,Y,P1,569,173,223,24,Preparedness Specialist
+9a.,dd,Y,P1,188,202,223,24,Santa Clara County
+9b.,dd,Y,P1,569,202,223,24,Sunnyvale EOC
+ToName,str,,P1,188,234,223,24
+FmName,str,,P1,569,234,223,24
+ToTel,pstr,,P1,188,261,223,24
+FmTel,pstr,,P1,569,261,223,24
+*10.,str,Y,P1,162,385,600,24
+11.,str,,P1,162,414,600,28
+12.,mstr,Y,P1,162,445,600,473
+OpRelayRcvd,str,,P1,157,959,259,24
+OpRelaySent,str,,P1,522,959,272,24
+OpCall,str,,P1,423,985,67,24
+OpName,str,,P1,109,985,235,24
+OpDate,str,,P1,559,986,90,24
+OpTime,str,,P1,719,986,80,24
 // there must be one and only one line that starts with a "*"
 // that entry will be become a part of the standard subject line
 // FieldId as it appears in outgoing message (followed by a ": ")

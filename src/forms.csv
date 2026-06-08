@@ -1,13 +1,17 @@
 #Name as it appears in menu, name as it appears in subject lines, descriptor amd image root filenames (+.desc and +.png, respectively)
-XSC Check-In/Out Message,Check-In or Check-Out,CheckInCheckOut.desc
-XSC Allied Health Facility Status,AHFacStat,Allied_Health_Status_DEOC-9_v20180200.desc
-XSC ICS-213 Message,ICS213,ICS-213_Message_Form_v20220119.desc
-XCS CPOD Commodities Update,CPODUpd,CPOD_Commodities_v20250730.desc
-XCS CPOD Site Information,CPODSite,CPOD_Site_Information_v20250812.desc
-XSC Damage_Assessment,DmgAsmt,Damage_Assessment_v20250812.desc
+XSC Check-In Message,Check-Out,CheckIn.desc
+XSC ICS-213 Message,ICS213,XSC_ICS-213_v20260512.desc
+XCS CPOD Commodities Update,CPODUpd,CPOD_Commodities_v20260506.desc
+XCS CPOD Site Information,CPODSite,CPOD_Site_Information_v20260503.desc
+XSC Damage_Assessment,DmgAsmt,Damage_Assessment_v20260503.desc
 XSC Notable Report,NotRep,Notable_Report_v20250812.desc
+XSC RACES Mutual Aid Request,XX,XX.desc
 XSC Resource Request,ResReq,Resource_Request_v20250811.desc
 XSC Road Closure,RoadCl,Road_Closure_v20250812.desc
 XSC Shelter,Shelter,Shelter_v20250812.desc
 XSC Situation Report,SitRep,Situation_Report_v20250812.desc
 XSC Windshield Survey,WSSurvey,Windshield_Survey_v20250812.desc
+XSC Check-Out Message,Check-Out,CheckOut.desc
+XSC Allied Health Facility Status,AHFacStat,Allied_Health_Status_DEOC-9_v20180200.desc
+XSC HAvBed Report,XX,XX.desc
+XSC Hospital Status,XX,XX.desc
