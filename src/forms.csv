@@ -8,11 +8,11 @@ XSC Notable Report,NotRep,Notable_Report_v20260503.desc
 XSC RACES Mutual Aid Request,XX,XSC_RACES_MA_Req_v20260506.desc
 XSC Resource Request,ResReq,Resource_Request_v20260503.desc
 XSC Road Closure,RoadCl,Road_Closure_v20260503.desc
-
-XSC Shelter,Shelter,Shelter_v20250812.desc
-XSC Situation Report,SitRep,Situation_Report_v20250812.desc
-XSC Windshield Survey,WSSurvey,Windshield_Survey_v20250812.desc
+XSC Shelter,Shelter,Shelter_v20260503.desc
+XSC Situation Report,SitRep,Situation_Report_v20260503.desc
+XSC Windshield Survey,WSSurvey,Windshield_Survey_v20260503.desc
 XSC Check-Out Message,Check-Out,CheckOut.desc
-XSC Allied Health Facility Status,AHFacStat,Allied_Health_Status_DEOC-9_v20180200.desc
-XSC HAvBed Report,XX,XX.desc
-XSC Hospital Status,XX,XX.desc
+# break
+XSC Allied Health Facility Status,AHFacStat,Allied_Health_Status_Report_v20260506.desc
+XSC HAvBed Report,XX,XSC_HAvBed_Report_v20260503.desc
+XSC Hospital Status,XX,XSC_Hospital_Status_v20260501.desc

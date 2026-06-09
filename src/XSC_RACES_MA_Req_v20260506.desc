@@ -1,0 +1,83 @@
+[Headers]
+!SCCoPIFO!
+#T: form-resource-request.html
+#V: 3.20-1.0
+
+[Footers]
+!/ADDON!
+
+[Pages]
+XSC_RACES_MA_Req_v20260506-1.png
+
+[Fields]
+MsgNo,str,,P1,317,69,133,22
+1a.,dstr,Y,P1,117,122,70,18
+1b.,tstr,&,P1,275,122,72,18
+5.,rb,Y,P1,418,121,381,20,IMMEDIATE,442,131,0,0,PRIORITY,578,131,0,0,ROUTINE,691,131,0,0
+7a.,dd,Y,P1,189,145,218,22,Resource Status & Tracking Unit,Supply Branch,Logistics
+8a.,str,Y,P1,559,145,237,22
+7b.,str,Y,P1,189,174,218,22
+8b.,str,Y,P1,559,174,237,22
+7c.,str,,P1,189,203,218,20
+8c,str,,P1,559,203,237,20
+7d.,str,,P1,189,227,218,20
+8d.,str,,P1,559,227,237,20
+15.,str,,P1,263,255,174,20
+15b.,str,,P1,682,255,113,20
+17.,str,,P1,263,282,174,20
+16b.,str,,P1,682,282,113,20
+18.,mstr,,P1,200,312,595,114
+18.1a.,nstr,,P1,208,459,25,20
+18.1b.,dd,,P1,258,459,135,20,Field Communicator,Net Control Operator,Packet Operator,Shadow Communicator
+18.1f.,str,,P1,420,459,175,20
+18.1c.,dd,,P1,636,459,65,20,1,2,3,IV,V
+18.1d.,dd,,P1,727,459,65,20,1,2,3,IV,V
+18.1g.,cb,,P1,610,469,0,0
+18.2a.,nstr,,P1,208,486,25,20
+18.2b.,dd,,P1,258,486,135,20,Field Communicator,Net Control Operator,Packet Operator,Shadow Communicator
+18.2f.,str,,P1,420,486,175,20
+18.2c.,dd,,P1,636,486,65,20,1,2,3,IV,V
+18.2d.,dd,,P1,727,486,65,20,1,2,3,IV,V
+18.2g.,cb,,P1,610,496,0,0
+18.3a.,nstr,,P1,208,511,25,20
+18.3b.,dd,,P1,258,511,135,20,Field Communicator,Net Control Operator,Packet Operator,Shadow Communicator
+18.3f.,str,,P1,420,511,175,20
+18.3c.,dd,,P1,636,511,65,20,1,2,3,IV,V
+18.3d.,dd,,P1,727,511,65,20,1,2,3,IV,V
+18.3g.,cb,,P1,610,521,0,0
+18.4a.,nstr,,P1,208,539,25,20
+18.4b.,dd,,P1,258,539,135,20,Field Communicator,Net Control Operator,Packet Operator,Shadow Communicator
+18.4f.,str,,P1,420,539,175,20
+18.4c.,dd,,P1,636,539,65,20,1,2,3,IV,V
+18.4d.,dd,,P1,727,539,65,20,1,2,3,IV,V
+18.4g.,cb,,P1,610,549,0,0
+18.4a.,nstr,,P1,208,566,25,20
+18.4b.,dd,,P1,258,566,135,20,Field Communicator,Net Control Operator,Packet Operator,Shadow Communicator
+18.4f.,str,,P1,420,566,175,20
+18.4c.,dd,,P1,636,566,65,20,1,2,3,IV,V
+18.4d.,dd,,P1,727,566,65,20,1,2,3,IV,V
+18.4g.,cb,,P1,610,576,0,0
+19a.,dstr,,P1,260,623,80,20
+19b.,tstr,,P1,616,623,60,20
+20a.,dstr,,P1,257,651,80,20
+20c.,tstr,,P1,410,651,60,20
+20c.,dstr,,P1,537,651,80,20
+20d.,tstr,,P1,713,651,60,20
+21.,str,,P1,201,685,590,20
+22.,str,,P1,201,712,590,20
+23.,str,,P1,201,744,590,20
+24a.,str,,P1,256,775,325,20
+24b.,str,,P1,676,775,115,20
+24d.,str,,P1,426,805,365,20
+25b.,str,,P1,256,836,325,20
+25c.,str,,P1,676,836,115,20
+25d.,str,,P1,357,865,435,20
+25t.,cb,,P1,515,906,0,0
+26a.,dstr,,P1,591,895,70,20
+26b.,tstr,,P1,726,895,70,20
+OpRelayRcvd,str,,P1,157,947,284,19
+OpRelaySent,str,,P1,492,947,287,19
+OpName,str,,P1,117,974,160,18
+OpCall,str,,P1,416,974,70,18
+OpDate,dstr,,P1,559,974,70,18
+OpTime,tstr,,P1,719,974,80,18

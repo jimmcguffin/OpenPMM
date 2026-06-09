@@ -1,0 +1,38 @@
+[Headers]
+!SCCoPIFO!
+#T: form-windshield-survey.htm
+#V: 3.20-1.0
+
+[Footers]
+!/ADDON!
+
+[Pages]
+Windshield_Survey_v20260503.png
+
+[Fields]
+MsgNo,str,,P1,332,89,133,22
+1a.,dstr,Y,P1,117,162,75,22
+1b.,tstr,&,P1,260,162,60,22
+5.,rb,Y,P1,412,165,371,20,IMMEDIATE,429,175,0,0,PRIORITY,565,175,0,0,ROUTINE,678,175,0,0
+7a.,dd,Y,P1,198,191,218,22,Resource Status & Tracking Unit,Supply Branch,Logistics
+8a.,str,Y,P1,558,191,225,22
+7b.,str,Y,P1,198,220,218,22
+8b.,str,Y,P1,558,220,225,22
+7c.,str,,P1,198,245,218,20
+8c,str,,P1,558,245,225,20
+7d.,str,,P1,198,273,218,20
+8d.,str,,P1,558,273,225,20
+20.,dd,Y,P1,182,326,600,19,Campbell,Cupertino,Gilroy,Los Altos,Los Altos Hills,Los Gatos,Milpitas,Monte Sereno,Morgan Hill,Mountain View,Palo Alto,San Jose,Santa Clara (City),Saratoga,Sunnyvale,Santa Clara County,County unincorporated
+21.,str,Y,P1,182,351,600,20
+*22.,str,Y,P1,182,376,600,20
+23a.,cb,Y,P1,265,409,0,0
+23b.,cb,Y,P1,416,409,0,0
+24.,rb,23a.,P1,197,424,502,65,Single,215,435,0,0,Townhouse,214,457,0,0,Apartment,217,476,0,0,Mobile,466,434,0,0,Business,467,458,0,0,Other,466,477,0,0
+26.,rb,,P1,242,489,452,45,Affected,266,500,0,0,Minor,266,520,0,0,Major,517,499,0,0,Destroyed,517,520,0,0
+27.,mstr,,P1,60,554,720,125
+OpRelayRcvd,str,,P1,148,723,294,18
+OpRelaySent,str,,P1,488,723,292,18
+OpName,str,,P1,111,746,227,20
+OpCall,str,,P1,417,746,86,20
+OpDate,str,,P1,560,746,75,20
+OpTime,str,,P1,713,746,60,20

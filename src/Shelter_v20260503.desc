@@ -1,0 +1,58 @@
+// I had to use // for comments since some fields start with "#"
+
+[Headers]
+!SCCoPIFO!
+#T: form-shelter.html
+#V: 3.20-1.0
+
+[Footers]
+!/ADDON!
+
+[Pages]
+Shelter_v20260503.png
+
+[Fields]
+MsgNo,str,,P1,315,86,143,22
+1a.,dstr,Y,P1,104,158,70,22
+1b.,tstr,Y,P1,264,158,60,22
+5.,rb,Y,P1,416,157,367,28,IMMEDIATE,430,171,0,0,PRIORITY,566,171,0,0,ROUTINE,677,171,0,0
+7a.,dd,Y,P1,197,189,219,22,Care & Shelter Unit,Mass Care & Emerg. Asst. Branch,Operations
+8a.,str,Y,P1,560,189,223,22
+7b.,str,Y,P1,197,215,219,22
+8b.,str,Y,P1,560,215,223,22
+7c.,str,,P1,197,240,219,20
+8c,str,,P1,560,240,223,20
+7d.,str,,P1,197,267,219,20
+8d.,str,,P1,560,267,223,20
+20.,dd,Y,P1,182,322,601,22,Campbell,Cupertino,Gilroy,Los Altos,Los Altos Hills,Los Gatos,Milpitas,Monte Sereno,Morgan Hill,Mountain View,Palo Alto,San Jose,Santa Clara (City),Saratoga,Sunnyvale,Santa Clara County,County unincorporated
+*21.,str,Y,P1,182,350,601,20
+22.,str,Y,P1,182,374,601,20
+23.,rg,Y,P1,148,400,553,43,23a.,23b.,23c.,23d.,23e.
+23a.,cb,,P1,166,409,0,0
+23c.,cb,,P1,316,410,0,0
+23e.,cb,,P1,565,409,0,0
+23b.,cb,,P1,166,430,0,0
+23d.,cb,,P1,316,430,0,0
+24.,rb,Y,P1,178,443,553,38,Setup,212,454,0,0,Open,215,471,0,0,Full,514,453,0,0,Closed,514,471,0,0
+25a.,cb,,P1,166,492,0,0
+25c,cb,,P1,416,493,0,0
+25b.,cb,,P1,166,513,0,0
+25d.,cb,,P1,416,514,0,0
+26.,mstr,,P1,128,529,650,87
+27.,rb,,P1,0,0,64,14,Yes,214,633,0,0,No,315,633,0,0
+28.,rb,,P1,0,0,64,14,Yes,589,633,0,0,No,689,632,0,0
+29.,nstr,Y,P1,213,651,85,16
+30.,nstr,Y,P1,450,651,90,16
+31.,nstr,Y,P1,675,651,100,16
+32.,mstr,,P1,215,675,563,68
+40.,rb,Y,P1,194,788,542,34,ARC,213,797,0,0,Government,413,795,0,0,Community,614,795,0,0,Private,213,815,0,0,Other,413,814,0,0
+41.,str,Y,P1,234,828,182,18
+42.,pstr,Y,P1,666,828,112,18
+43.,str,,P1,230,854,549,18
+OpRelayRcvd,str,,P1,157,909,284,20
+OpRelaySent,str,,P1,492,909,287,20
+OpName,str,,P1,108,936,160,20
+OpCall,str,,P1,415,936,70,20
+OpDate,dstr,,P1,555,936,75,20
+OpTime,tstr,,P1,707,936,60,20
+
