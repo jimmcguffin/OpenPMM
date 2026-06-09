@@ -84,7 +84,7 @@ class FormItem(QObject):
         # radio buttons and check boxes are never individually shown in red, just the groups that they are in
         # also, allg groups are never drawn, in that case the children are
         #if len(f[2]) and f[4] != "0" and not (f[1] == "rb:" or f[1] == "cb" or f[1] == "allg"): #!!! this looks wrong to me, "rb:" should just be "rb"
-        if len(f[2]) and f[4] != "0" and not (f[1] == "rb" or f[1] == "cb" or f[1] == "allg"): #!!! see if this works
+        if len(f[2]) and f[4] != "0" and not (f[1] == "cb" or f[1] == "allg"): #!!! see if this works
             self.validity_indicator = QFrame(parent)
             # expand the coordinates a litle
             e = 4
@@ -105,7 +105,7 @@ class FormItem(QObject):
         return bool(self.get_value())
     
     def is_required(self) -> bool:
-        if not self.dependson :
+        if not self.dependson:
             return False
         # can be "always required"
         if self.dependson == "Y":

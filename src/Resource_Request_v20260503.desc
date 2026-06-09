@@ -1,0 +1,70 @@
+[Headers]
+!SCCoPIFO!
+#T: form-resource-request.html
+#V: 3.20-1.0
+
+[Footers]
+!/ADDON!
+
+[Pages]
+Resource_Request_v20260503-1.png[0:3019]
+Resource_Request_v20260503-2.png[206:1981]
+
+[Fields]
+MsgNo,str,,P1,317,88,148,22
+1b.,dstr,Y,P1,112,162,75,22
+1b.,tstr,&,P1,265,162,60,22
+5.,rb,Y,P1,415,165,365,20,IMMEDIATE,430,175,0,0,PRIORITY,565,175,0,0,ROUTINE,678,175,0,0
+7a.,dd,Y,P1,196,193,218,22,Resource Status & Tracking Unit,Supply Branch,Logistics
+8a.,str,Y,P1,559,193,221,22
+7b.,str,Y,P1,196,220,218,22
+8b.,str,Y,P1,559,220,221,22
+7c.,str,,P1,196,245,218,20
+8c,str,,P1,559,245,221,20
+7d.,str,,P1,196,272,218,20
+8d.,str,,P1,559,272,221,20
+*20.,str,Y,P1,125,327,657,20
+21.,dd,Y,P1,213,352,569,20,Campbell,Cupertino,Gilroy,Los Altos,Los Altos Hills,Los Gatos,Milpitas,Monte Sereno,Morgan Hill,Mountain View,Palo Alto,San Jose,Santa Clara (City),Saratoga,Sunnyvale,Santa Clara County,County unincorporated
+23n.,str,Y,P1,242,404,321,18
+23q.,nstr,Y,P1,739,406,44,17
+23d.,mstr,,P1,243,430,538,41
+23i.,rb,Y,P1,422,474,160,21,YES,438,486,0,0,NO,502,486,0,0
+24n.,str,,P1,242,504,321,18
+24q.,nstr,24n.,P1,739,506,44,17
+24d.,mstr,,P1,243,530,539,41
+24i.,rb,24n,P1,422,577,160,21,YES,439,586,0,0,NO,502,586,0,0
+25n.,str,,P1,242,605,321,18
+25q.,nstr,25n.,P1,739,607,44,17
+25d.,mstr,,P1,243,631,539,41
+25i.,rb,25n.,P1,422,677,160,21,YES,438,687,0,0,NO,502,687,0,0
+26n.,str,,P1,242,706,321,18
+26q.,nstr,26n.,P1,739,707,44,17
+26d.,mstr,,P1,243,732,539,41
+26i.,rb,26n.,P1,422,775,160,21,YES,438,788,0,0,NO,502,788,0,0
+27n.,str,,P1,242,807,321,18
+27q.,nstr,27n.,P1,739,808,44,17
+27d.,mstr,,P1,243,833,539,41
+27i.,rb,27n.,P1,422,881,160,21,YES,437,889,0,0,NO,502,890,0,0
+28n.,str,,P1,242,907,321,18
+28q.,nstr,28n.,P1,739,909,44,17
+28d.,mstr,,P1,243,933,539,41
+28i.,rb,28n.,P1,422,980,160,21,YES,438,991,0,0,NO,502,992,0,0
+30.,rb,Y,P2,143,112,500,45,Urgent,166,122,0,0,High,166,143,0,0,Medium,467,122,0,0,Low,468,143,0,0
+40.,str,Y,P2,233,202,185,18
+40s.,cb,,P2,775,209,0,0
+41.,pstr,Y,P2,233,226,185,18
+42.,str,Y,P2,587,226,195,18
+43.,str,Y,P2,233,252,549,18
+53.,str,,P2,324,338,368,22
+60.,mstr,,P2,56,408,726,107
+OpRelayRcvd,str,,P2,157,591,284,20
+OpRelaySent,str,,P2,492,591,287,20
+OpName,str,,P2,117,618,160,20
+OpCall,str,,P2,351,618,70,20
+OpDate,dstr,,P2,514,618,70,20
+OpTime,tstr,,P2,684,618,80,20
+1c.,dstr,,P1,117,378,75,20
+1c.,tstr,,P1,502,377,60,22
+51.,str,,P2,324,310,368,22
+// see the ICS213 file for a description of these lines
+//page 2

@@ -1,0 +1,41 @@
+// I had to use // for comments since some fields start with "#"
+
+[Headers]
+!SCCoPIFO!
+#T: form-road-closure.html
+#V: 3.20-1.0
+
+[Footers]
+!/ADDON!
+
+[Pages]
+Road_Closure_v20260503.png
+
+[Fields]
+MsgNo,str,Y,P1,327,85,115,22
+1a.,dstr,Y,P1,96,159,74,22
+1b.,tstr,Y,P1,258,159,64,22
+5.,rb,Y,P1,398,157,386,28,IMMEDIATE,430,171,0,0,PRIORITY,564,172,0,0,ROUTINE,677,173,0,0
+7a.,dd,Y,P1,199,189,217,22,Public Works Group,Construction & Eng. Branch,Operations
+8a.,str,Y,P1,564,189,219,22
+7b.,str,Y,P1,199,215,217,22
+8b.,str,Y,P1,564,215,219,22
+7c.,str,,P1,199,240,217,20
+8c,str,,P1,564,240,219,20
+7d.,str,,P1,199,268,217,20
+8d.,str,,P1,564,268,219,20
+20.,dd,Y,P1,206,321,575,22,Campbell,Cupertino,Gilroy,Los Altos,Los Altos Hills,Los Gatos,Milpitas,Monte Sereno,Morgan Hill,Mountain View,Palo Alto,San Jose,Santa Clara (City),Saratoga,Sunnyvale,Santa Clara County,County unincorporated
+*21.,str,Y,P1,206,352,575,19
+22.,mstr,Y,P1,206,376,575,105
+23.,mstr,Y,P1,206,491,575,104
+24.,rb,Y,P1,206,599,575,25,Planned Closure,216,613,0,0,Closed,416,613,0,0,Reopened,566,613,0,0
+30d,dstr,,P1,217,668,94,20
+30t,tstr,,P1,581,668,60,20
+31d,dstr,,P1,217,695,94,20
+32t,tstr,,P1,581,695,60,20
+OpRelayRcvd,str,,P1,150,758,294,20
+OpRelaySent,str,,P1,493,758,290,20
+OpName,str,,P1,102,785,160,20
+OpCall,str,,P1,416,785,70,20
+OpDate,dstr,,P1,554,785,70,20
+OpTime,tstr,,P1,709,785,75,20
