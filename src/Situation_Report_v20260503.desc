@@ -1,7 +1,7 @@
 [Headers]
 !SCCoPIFO!
 #T: form-situation-report.html
-#V: 3.20-1.0
+#V: 4.0-1.1
 
 [Footers]
 !/ADDON!
@@ -17,12 +17,12 @@ MsgNo,str,,P1,327,87,133,22
 1b.,tstr,&,P1,265,162,60,22
 5.,rb,Y,P1,413,156,366,30,IMMEDIATE,431,171,0,0,PRIORITY,565,171,0,0,ROUTINE,678,171,0,0
 7a.,dd,Y,P1,197,189,218,22,Resource Status & Tracking Unit,Supply Branch,Logistics
-8a.,str,Y,P1,562,189,221,22
 7b.,str,Y,P1,197,216,218,22
-8b.,str,Y,P1,562,216,221,22
 7c.,str,,P1,197,241,218,20
-8c,str,,P1,562,241,221,20
 7d.,str,,P1,197,268,218,20
+8a.,str,Y,P1,562,189,221,22
+8b.,str,Y,P1,562,216,221,22
+8c.,str,,P1,562,241,221,20
 8d.,str,,P1,562,268,221,20
 20d.,dstr,Y,P1,187,321,217,20
 20t.,tstr,Y,P1,549,321,229,20

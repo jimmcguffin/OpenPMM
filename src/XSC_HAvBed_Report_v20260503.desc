@@ -1,0 +1,46 @@
+[Headers]
+!SCCoPIFO!
+#T: form-mhoc-beds-status-v3.html
+#V: 4.0-3.0
+
+[Footers]
+!/ADDON!
+
+[Pages]
+XSC_HAvBed_Report_v20260503.png
+
+[Fields]
+MsgNo,str,Y,P1,327,83,115,22
+1a.,dstr,Y,P1,116,161,75,22
+1b.,tstr,Y,P1,258,161,60,22
+5.,rb,Y,P1,413,159,366,28,IMMEDIATE,429,172,0,0,PRIORITY,564,172,0,0,ROUTINE,677,173,0,0
+7a.,dd,Y,P1,199,194,197,22,Public Works Group,Construction & Eng. Branch,Operations
+7b.,str,Y,P1,199,225,197,22
+7c.,str,,P1,199,255,197,20
+7d.,str,,P1,199,288,197,20
+8a.,str,Y,P1,564,194,219,22
+8b.,str,Y,P1,564,225,219,22
+8c.,str,,P1,564,255,219,20
+8d.,str,,P1,564,288,219,20
+*20.,dd,,P1,255,344,516,22,El Camino Hospital Los Gatos,El Camino Hospital Mountain View,Good Samaritan Hospital,Kaiser San Jose Medical Center,Kaiser Santa Clara Hospital,Lucile Packard Children's Hospital,O'Connor Hospital,Palo Alto Veterans Hospital,Regional San Jose Medical Center,Saint Louise Regional Hospital,Stanford Hospital,Stanford School of Medicine,Valley Medical Center
+41.,str,,P1,258,417,95,20
+42.,nstr,,P1,258,621,95,20
+43.,nstr,,P1,258,475,95,20
+44.,nstr,,P1,258,763,95,20
+45.,nstr,,P1,258,735,95,20
+46.,nstr,,P1,258,505,95,20
+47.,nstr,,P1,258,589,95,20
+48.,nstr,,P1,258,675,95,20
+50.,nstr,,P1,258,790,95,20
+51.,mstr,,P1,151,821,630,70
+52.,nstr,,P1,258,446,95,20
+53.,nstr,,P1,258,534,95,20
+54.,nstr,,P1,258,563,95,20
+55.,nstr,,P1,258,649,95,20
+56.,nstr,,P1,258,706,95,20
+OpRelayRcvd,str,,P1,157,951,259,20
+OpRelaySent,str,,P1,496,951,292,20
+OpCall,str,,P1,387,978,91,20
+OpName,str,,P1,106,978,207,20
+OpDate,dstr,,P1,530,978,75,20
+OpTime,tstr,,P1,668,978,60,20

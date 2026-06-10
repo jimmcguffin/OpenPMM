@@ -1,7 +1,7 @@
 [Headers]
 !SCCoPIFO!
-#T: form-resource-request.html
-#V: 3.20-1.0
+#T: form-oa-mutual-aid-request-v3.html
+#V: 4.0-3.3
 
 [Footers]
 !/ADDON!
@@ -15,14 +15,14 @@ MsgNo,str,,P1,317,69,133,22
 1b.,tstr,&,P1,275,122,72,18
 5.,rb,Y,P1,418,121,381,20,IMMEDIATE,442,131,0,0,PRIORITY,578,131,0,0,ROUTINE,691,131,0,0
 7a.,dd,Y,P1,189,145,218,22,Resource Status & Tracking Unit,Supply Branch,Logistics
-8a.,str,Y,P1,559,145,237,22
 7b.,str,Y,P1,189,174,218,22
-8b.,str,Y,P1,559,174,237,22
 7c.,str,,P1,189,203,218,20
-8c,str,,P1,559,203,237,20
 7d.,str,,P1,189,227,218,20
+8a.,str,Y,P1,559,145,237,22
+8b.,str,Y,P1,559,174,237,22
+8c.,str,,P1,559,203,237,20
 8d.,str,,P1,559,227,237,20
-15.,str,,P1,263,255,174,20
+*15.,str,,P1,263,255,174,20
 15b.,str,,P1,682,255,113,20
 17.,str,,P1,263,282,174,20
 16b.,str,,P1,682,282,113,20

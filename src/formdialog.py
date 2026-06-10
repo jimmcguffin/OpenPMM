@@ -656,6 +656,8 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
         assert(self.pages)
         tmp = QPixmap(self.pages[0][0])
         w = tmp.width()
+        if not w:
+            return
         scale = 850/w
 
         h = 0

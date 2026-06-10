@@ -1,7 +1,7 @@
 [Headers]
 !SCCoPIFO!
 #T: form-resource-request.html
-#V: 3.20-1.0
+#V: 4.0-1.1
 
 [Footers]
 !/ADDON!
@@ -16,12 +16,12 @@ MsgNo,str,,P1,317,88,148,22
 1b.,tstr,&,P1,265,162,60,22
 5.,rb,Y,P1,415,165,365,20,IMMEDIATE,430,175,0,0,PRIORITY,565,175,0,0,ROUTINE,678,175,0,0
 7a.,dd,Y,P1,196,193,218,22,Resource Status & Tracking Unit,Supply Branch,Logistics
-8a.,str,Y,P1,559,193,221,22
 7b.,str,Y,P1,196,220,218,22
-8b.,str,Y,P1,559,220,221,22
 7c.,str,,P1,196,245,218,20
-8c,str,,P1,559,245,221,20
 7d.,str,,P1,196,272,218,20
+8a.,str,Y,P1,559,193,221,22
+8b.,str,Y,P1,559,220,221,22
+8c.,str,,P1,559,245,221,20
 8d.,str,,P1,559,272,221,20
 *20.,str,Y,P1,125,327,657,20
 21.,dd,Y,P1,213,352,569,20,Campbell,Cupertino,Gilroy,Los Altos,Los Altos Hills,Los Gatos,Milpitas,Monte Sereno,Morgan Hill,Mountain View,Palo Alto,San Jose,Santa Clara (City),Saratoga,Sunnyvale,Santa Clara County,County unincorporated
@@ -55,6 +55,7 @@ MsgNo,str,,P1,317,88,148,22
 41.,pstr,Y,P2,233,226,185,18
 42.,str,Y,P2,587,226,195,18
 43.,str,Y,P2,233,252,549,18
+51.,str,,P2,324,310,368,22
 53.,str,,P2,324,338,368,22
 60.,mstr,,P2,56,408,726,107
 OpRelayRcvd,str,,P2,157,591,284,20
@@ -63,8 +64,4 @@ OpName,str,,P2,117,618,160,20
 OpCall,str,,P2,351,618,70,20
 OpDate,dstr,,P2,514,618,70,20
 OpTime,tstr,,P2,684,618,80,20
-1c.,dstr,,P1,117,378,75,20
-1c.,tstr,,P1,502,377,60,22
-51.,str,,P2,324,310,368,22
-// see the ICS213 file for a description of these lines
 //page 2

@@ -3,7 +3,7 @@
 [Headers]
 !SCCoPIFO!
 #T: form-notable-report.html
-#V: 3.20-1.0
+#V: 4.0-1.1
 
 [Footers]
 !/ADDON!
@@ -17,14 +17,14 @@ MsgNo,str,,P1,327,67,138,22
 1b.,tstr,Y,P1,267,141,60,22
 5.,rb,Y,P1,415,137,362,31,IMMEDIATE,430,151,0,0,PRIORITY,565,151,0,0,ROUTINE,677,151,0,0
 7a.,dd,Y,P1,203,171,213,22,Situational Analysis Unit,Common Operating Picture Spec.,Planning
-8a.,str,Y,P1,568,171,214,22
 7b.,str,Y,P1,203,195,213,22
-8b.,str,Y,P1,568,195,214,22
 7c.,str,,P1,203,222,213,20
-8c,str,,P1,568,222,214,20
-7d.,str,,P1,203,249,213,20
 8d.,str,,P1,568,249,214,20
-*20.,dd,Y,P1,166,302,245,22,Campbell,Cupertino,Gilroy,Los Altos,Los Altos Hills,Los Gatos,Milpitas,Monte Sereno,Morgan Hill,Mountain View,Palo Alto,San Jose,Santa Clara (City),Saratoga,Sunnyvale,Santa Clara County,County unincorporated
+8a.,str,Y,P1,568,171,214,22
+8b.,str,Y,P1,568,195,214,22
+8c.,str,,P1,568,222,214,20
+8d.,str,,P1,568,249,214,20
+20.,dd,Y,P1,166,302,245,22,Campbell,Cupertino,Gilroy,Los Altos,Los Altos Hills,Los Gatos,Milpitas,Monte Sereno,Morgan Hill,Mountain View,Palo Alto,San Jose,Santa Clara (City),Saratoga,Sunnyvale,Santa Clara County,County unincorporated
 21.,str,Y,P1,524,302,262,20
 22.,rb,Y,P1,300,329,325,19,High,317,339,0,0,Medium,417,339,0,0,Low,565,339,0,0
 23.,rb,Y,P1,300,353,182,20,Yes,315,364,0,0,No,416,363,0,0

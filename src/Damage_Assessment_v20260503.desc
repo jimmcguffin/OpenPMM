@@ -14,12 +14,12 @@ MsgNo,str,,P1,327,88,101,23
 1b.,tstr,Y,P1,262,162,64,20
 5.,rb,Y,P1,414,159,380,26,IMMEDIATE,429,170,0,0,PRIORITY,565,170,0,0,ROUTINE,678,170,0,0
 7a.,dd,Y,P1,204,188,207,24,Damage/Safety Assessment Group,Construction & Eng. Branch,Operations
-8a.,str,Y,P1,569,188,213,24
 7b.,str,Y,P1,204,214,207,24
-8b.,str,Y,P1,569,214,213,24
 7c.,str,,P1,204,241,207,20
-8c.,str,,P1,569,241,213,20
 7d.,str,,P1,204,267,207,20
+8a.,str,Y,P1,569,188,213,24
+8b.,str,Y,P1,569,214,213,24
+8c.,str,,P1,569,241,213,20
 8d.,str,,P1,569,267,213,20
 20.,dd,Y,P1,198,323,219,20,Campbell,Cupertino,Gilroy,Los Altos,Los Altos Hills,Los Gatos,Milpitas,Monte Sereno,Morgan Hill,Mountain View,Palo Alto,San Jose,Santa Clara (City),Saratoga,Sunnyvale,Santa Clara County,County unincorporated
 21.,str,Y,P1,548,323,235,17

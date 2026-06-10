@@ -17,12 +17,12 @@ MsgNo,str,,P1,330,91,148,22
 1b.,tstr,Y,P1,263,158,65,22
 5.,rb,Y,P1,408,157,375,28,IMMEDIATE,430,170,0,0,PRIORITY,564,171,0,0,ROUTINE,677,171,0,0
 7a.,dd,Y,P1,198,188,217,24,CPOD Unit,Mass Care & Emerg. Asst. Branch,Operations
-8a.,str,Y,P1,561,188,220,24
 7b.,str,Y,P1,198,215,217,24
-8b.,str,Y,P1,561,215,220,24
 7c.,str,,P1,198,242,217,20
-8c,str,,P1,561,242,220,20
 7d.,str,,P1,198,267,217,20
+8a.,str,Y,P1,561,188,220,24
+8b.,str,Y,P1,561,215,220,24
+8c.,str,,P1,561,242,220,20
 8d.,str,,P1,561,267,220,20
 20.,dd,,P1,186,323,596,20,Campbell,Cupertino,Gilroy,Los Altos,Los Altos Hills,Los Gatos,Milpitas,Monte Sereno,Morgan Hill,Mountain View,Palo Alto,San Jose,Santa Clara (City),Saratoga,Sunnyvale,Santa Clara County,County unincorporated
 21d.,dstr,Y,P1,186,349,70,18
