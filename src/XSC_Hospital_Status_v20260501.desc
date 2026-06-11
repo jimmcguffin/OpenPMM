@@ -16,44 +16,51 @@ MsgNo,str,Y,P1,327,84,115,22
 1b.,tstr,Y,P1,258,144,60,22
 5.,rb,Y,P1,406,142,386,28,IMMEDIATE,423,156,0,0,PRIORITY,567,157,0,0,ROUTINE,688,157,0,0
 7a.,dd,Y,P1,199,179,217,22,Public Works Group,Construction & Eng. Branch,Operations
-8a.,str,Y,P1,564,179,219,22
 7b.,str,Y,P1,199,210,217,22
-8b.,str,Y,P1,564,210,219,22
 7c.,str,,P1,199,245,217,20
-8c.,str,,P1,564,245,219,20
 7d.,str,,P1,199,274,217,20
+8a.,str,Y,P1,564,179,219,22
+8b.,str,Y,P1,564,210,219,22
+8c.,str,,P1,564,245,219,20
 8d.,str,,P1,564,274,219,20
 *20.,dd,,P1,199,305,516,22,El Camino Hospital Los Gatos,El Camino Hospital Mountain View,Good Samaritan Hospital,Kaiser San Jose Medical Center,Kaiser Santa Clara Hospital,Lucile Packard Children's Hospital,O'Connor Hospital,Palo Alto Veterans Hospital,Regional San Jose Medical Center,Saint Louise Regional Hospital,Stanford Hospital,Stanford School of Medicine,Valley Medical Center
-12.1.,rb,,P1,187,359,597,40
-12.2.,rb,,P1,187,429,597,40,Unknown,266,369,0,0,Internal Disaster,266,389,0,0,Open,426,367,0,0,Specialty Bypass,428,391,0,0,Diverting Ambulances,602,369,0,0,Unknown,265,436,0,0,Available,265,457,0,0,Not Available,427,435,0,0,Active,603,436,0,0
-12.3.,rb,,P1,187,494,597,25,Activated,265,504,0,0,Monitoring,427,504,0,0,Not Activated,602,504,0,0
-12.4.,rb,,P1,187,545,597,25,Unknown,265,554,0,0,Open,427,554,0,0,Full,602,554,0,0
-12.5.,rb,,P1,187,597,597,40,Unknown1,264,607,0,0,None1,266,627,0,0,Normal1,427,605,0,0,Generator,602,606,0,0
-12.6.,rb,,P1,187,684,597,62,Unknown,264,693,0,0,Not Inspected,265,715,0,0,Compromised,264,735,0,0,Restricted Use,426,694,0,0,Safe to Occupy,426,715,0,0,Evacuating,426,737,0,0,Unsafe to Occupy,602,693,0,0,Normal,602,715,0,0,Closed,603,737,0,0,Unknown,264,693,0,0,Not Inspected,265,715,0,0,Compromised,264,735,0,0,Restricted Use,426,694,0,0,Safe to Occupy,426,715,0,0,Evacuating,426,737,0,0,Unsafe to Occupy,602,693,0,0,Normal,602,715,0,0,Closed,603,737,0,0,Unknown,264,693,0,0,Not Inspected,265,715,0,0,Compromised,264,735,0,0,Restricted Use,426,694,0,0,Safe to Occupy,426,715,0,0,Evacuating,426,737,0,0,Unsafe to Occupy,602,693,0,0,Normal,602,715,0,0,Closed,603,737,0,0,Unknown,264,693,0,0,Not Inspected,265,715,0,0,Compromised,264,735,0,0,Restricted Use,426,694,0,0,Safe to Occupy,426,715,0,0,Evacuating,426,737,0,0,Unsafe to Occupy,602,693,0,0,Normal,602,715,0,0,Closed,603,737,0,0
-12.7.,rb,,P1,187,774,597,43,Unknown,265,783,0,0,Restricted Access,265,805,0,0,Normal,427,783,0,0,Lockdown,427,804,0,0,Elevated,602,782,0,0
-12.8.,rb,,P1,187,840,597,24,Unknown,264,849,0,0,Adequate,427,850,0,0,Insufficient,603,849,0,0
-12.9.,rb,,P1,187,892,597,23,Unknown,265,902,0,0,Adequate,427,902,0,0,Insufficient,602,901,0,0
-12.10.,rb,,P1,187,944,597,21,Unknown,265,953,0,0,Adequate,427,953,0,0,Insufficient,602,953,0,0
+12.1.,rb,,P1,187,359,597,40,Unknown,266,369,0,0,Internal Disaster,266,389,0,0,Open,426,367,0,0,Specialty Bypass,428,391,0,0,Diverting Ambulances,602,369,0,0
 12.1c.,str,,P1,271,403,512,18
+12.2.,rb,,P1,187,429,597,40,Unknown,265,436,0,0,Available,265,457,0,0,Not Available,427,435,0,0,Active,603,436,0,0
 12.2c.,str,,P1,271,473,512,18
+12.3.,rb,,P1,187,494,597,25,Activated,265,504,0,0,Monitoring,427,504,0,0,Not Activated,602,504,0,0
 12.3c.,str,,P1,271,521,512,18
+12.4.,rb,,P1,187,545,597,25,Unknown,265,554,0,0,Open,427,554,0,0,Full,602,554,0,0
 12.4c.,str,,P1,271,576,512,18
+12.5.,rb,,P1,187,597,597,40,Unknown1,264,607,0,0,None1,266,627,0,0,Normal1,427,605,0,0,Generator,602,606,0,0
 12.5f.,str,,P1,376,641,117,18
 12.5c.,str,,P1,271,661,512,18
+12.6.,rb,,P1,187,684,597,62,Unknown,264,693,0,0,Not Inspected,265,715,0,0,Compromised,264,735,0,0,Restricted Use,426,694,0,0,Safe to Occupy,426,715,0,0,Evacuating,426,737,0,0,Unsafe to Occupy,602,693,0,0,Normal,602,715,0,0,Closed,603,737,0,0
 12.6c.,str,,P1,271,750,512,18
+12.7.,rb,,P1,187,774,597,43,Unknown,265,783,0,0,Restricted Access,265,805,0,0,Normal,427,783,0,0,Lockdown,427,804,0,0,Elevated,602,782,0,0
 12.7c.,str,,P1,271,818,512,18
+12.8.,rb,,P1,187,840,597,24,Unknown,264,849,0,0,Adequate,427,850,0,0,Insufficient,603,849,0,0
 12.8c.,str,,P1,271,869,512,18
+12.9.,rb,,P1,187,892,597,23,Unknown,265,902,0,0,Adequate,427,902,0,0,Insufficient,602,901,0,0
 12.9c.,str,,P1,271,919,512,18
+12.10.,rb,,P1,187,944,597,21,Unknown,265,953,0,0,Adequate,427,953,0,0,Insufficient,602,953,0,0
 12.10c.,str,,P1,271,975,512,18
 32.,mstr,,P2,185,86,605,35
+14.6.,nstr,,P2,317,161,100,20
 14.10.,nstr,,P2,649,161,100,20
+14.7.,nstr,,P2,317,199,100,20
 14.3.,nstr,,P2,649,199,100,20
 14.4.,nstr,,P2,317,230,100,20
-14.6.,nstr,,P2,649,230,100,20
-14.6.,nstr,,P2,317,161,100,20
+14.5.,nstr,,P2,649,230,100,20
 14.8.,nstr,,P2,317,255,100,20
 14.9.,nstr,,P2,649,255,100,20
-14.7.,nstr,,P2,317,199,100,20
+17a.,cb,,P2,365,314,0,0
+17b.,cb,,P2,484,314,0,0
+17c.,cb,,P2,640,315,0,0
+17d.,cb,,P2,365,335,0,0
+17e.,cb,,P2,484,336,0,0
+17f.,cb,,P2,640,335,0,0
+17g.,str,,P2,445,349,336,20
 15.1.,rb,,P2,278,440,94,24,Y,294,453,0,0,N,339,453,0,0
 15.1c.,str,,P2,414,440,219,24
 15.1d.,dstr,,P2,700,440,75,24
@@ -84,19 +91,12 @@ MsgNo,str,Y,P1,327,84,115,22
 15.12.,rb,,P2,278,729,94,24,Y,294,742,0,0,N,339,742,0,0
 15.12c.,str,,P2,414,729,219,24
 15.12d.,dstr,,P2,700,729,75,24
-16.,rb,,P2,252,787,94,24
+16.,rb,,P2,252,787,94,24,N,264,800,0,0,Y,311,799,0,0
 16a.,nstr,,P2,345,815,126,20
 16b.,nstr,,P2,345,840,126,20
-17a.,cb,,P2,365,314,0,0
-17b.,cb,,P2,484,314,0,0
-17c.,cb,,P2,640,315,0,0
-17d.,cb,,P2,365,335,0,0
-17e.,cb,,P2,484,336,0,0
-17g.,str,,P2,445,349,336,20
-17f.,cb,,P2,640,335,0,0
 OpRelayRcvd,str,,P2,157,899,259,20
 OpRelaySent,str,,P2,496,899,292,20
-OpCall,str,,P2,417,931,91,20
 OpName,str,,P2,106,931,207,20
+OpCall,str,,P2,417,931,91,20
 OpDate,dstr,,P2,560,931,75,20
 OpTime,tstr,,P2,730,931,60,20
