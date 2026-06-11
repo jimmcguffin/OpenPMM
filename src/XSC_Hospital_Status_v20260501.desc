@@ -32,7 +32,7 @@ MsgNo,str,Y,P1,327,84,115,22
 12.3c.,str,,P1,271,521,512,18
 12.4.,rb,,P1,187,545,597,25,Unknown,265,554,0,0,Open,427,554,0,0,Full,602,554,0,0
 12.4c.,str,,P1,271,576,512,18
-12.5.,rb,,P1,187,597,597,40,Unknown1,264,607,0,0,None1,266,627,0,0,Normal1,427,605,0,0,Generator,602,606,0,0
+12.5.,rb,,P1,187,597,597,40,Unknown,264,607,0,0,None,266,627,0,0,Normal,427,605,0,0,Generator,602,606,0,0
 12.5f.,str,,P1,376,641,117,18
 12.5c.,str,,P1,271,661,512,18
 12.6.,rb,,P1,187,684,597,62,Unknown,264,693,0,0,Not Inspected,265,715,0,0,Compromised,264,735,0,0,Restricted Use,426,694,0,0,Safe to Occupy,426,715,0,0,Evacuating,426,737,0,0,Unsafe to Occupy,602,693,0,0,Normal,602,715,0,0,Closed,603,737,0,0
@@ -45,7 +45,7 @@ MsgNo,str,Y,P1,327,84,115,22
 12.9c.,str,,P1,271,919,512,18
 12.10.,rb,,P1,187,944,597,21,Unknown,265,953,0,0,Adequate,427,953,0,0,Insufficient,602,953,0,0
 12.10c.,str,,P1,271,975,512,18
-32.,mstr,,P2,185,86,605,35
+13.,mstr,,P2,185,86,605,35
 14.6.,nstr,,P2,317,161,100,20
 14.10.,nstr,,P2,649,161,100,20
 14.7.,nstr,,P2,317,199,100,20
@@ -100,3 +100,13 @@ OpName,str,,P2,106,931,207,20
 OpCall,str,,P2,417,931,91,20
 OpDate,dstr,,P2,560,931,75,20
 OpTime,tstr,,P2,730,931,60,20
+
+[SortOrder]
+MsgNo
+<the rest>
+OpRelayRcvd
+OpRelaySent
+OpCall
+OpName
+OpDate
+OpTime

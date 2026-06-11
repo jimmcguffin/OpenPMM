@@ -15,25 +15,25 @@ XSC_ICS-213_v20260512.png
 MsgNo,str,Y,P1,321,84,94,25
 1a.,dstr,Y,P1,110,141,73,24
 1b.,tstr,Y,P1,256,141,64,24
-5.,rb,Y,P1,412,142,377,23,IMMEDIATE,423,153,0,0,PRIORITY,568,152,0,0,ROUTINE,698,152,0,0
+5.,rb,Y,P1,412,142,377,23,IMMEDIATE,423,153,0,0,PRIORITY,568,152,0,0,ROUTINE,689,152,0,0
+7.,dd,Y,P1,188,173,223,24,Radio Operators
+9a.,dd,Y,P1,188,202,223,24,Santa Clara County
+ToName,str,,P1,188,234,223,24
+ToTel,pstr,,P1,188,264,223,24
+8.,dd,Y,P1,569,173,223,24,Preparedness Specialist
+9b.,dd,Y,P1,569,202,223,24,Sunnyvale EOC
+FmName,str,,P1,569,234,223,24
+FmTel,pstr,,P1,569,264,223,24
 6a.,rb,,P1,379,296,128,23,Yes,397,308,0,0,No,450,309,0,0
 6b.,rb,,P1,379,327,128,28,Yes,396,339,0,0,No,451,339,0,0
 6d.,str,6b.=Yes,P1,621,328,162,24
-7.,dd,Y,P1,188,173,223,24,Radio Operators
-8.,dd,Y,P1,569,173,223,24,Preparedness Specialist
-9a.,dd,Y,P1,188,202,223,24,Santa Clara County
-9b.,dd,Y,P1,569,202,223,24,Sunnyvale EOC
-ToName,str,,P1,188,234,223,24
-FmName,str,,P1,569,234,223,24
-ToTel,pstr,,P1,188,261,223,24
-FmTel,pstr,,P1,569,261,223,24
 *10.,str,Y,P1,162,385,600,24
 11.,str,,P1,162,414,600,28
 12.,mstr,Y,P1,162,445,600,473
 OpRelayRcvd,str,,P1,157,958,259,24
 OpRelaySent,str,,P1,522,958,272,24
-OpCall,str,,P1,423,985,67,24
 OpName,str,,P1,109,985,235,24
+OpCall,str,,P1,423,985,67,24
 OpDate,str,,P1,559,986,90,24
 OpTime,str,,P1,719,986,80,24
 // there must be one and only one line that starts with a "*"
@@ -51,3 +51,28 @@ OpTime,str,,P1,719,986,80,24
 // First is the string that will be sent as the value for this button choice
 // Then 4 numbers for the location on screen, same details as for the main location
 
+[SortOrder]
+MsgNo
+1a.
+1b.
+5.
+6a.
+6b.
+6d.
+7.
+8.
+9a.
+9b.
+ToName
+FmName
+ToTel
+FmTel
+10.
+11.
+12.
+OpRelayRcvd
+OpRelaySent
+OpCall
+OpName
+OpDate
+OpTime

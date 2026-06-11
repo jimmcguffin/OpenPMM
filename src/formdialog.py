@@ -83,8 +83,7 @@ class FormItem(QObject):
         self.group = -1 # gets set if part of a group
         # radio buttons and check boxes are never individually shown in red, just the groups that they are in
         # also, allg groups are never drawn, in that case the children are
-        #if len(f[2]) and f[4] != "0" and not (f[1] == "rb:" or f[1] == "cb" or f[1] == "allg"): #!!! this looks wrong to me, "rb:" should just be "rb"
-        if len(f[2]) and f[4] != "0" and not (f[1] == "cb" or f[1] == "allg"): #!!! see if this works
+        if len(f[2]) and f[4] != "0" and not (f[1] == "cb" or f[1] == "allg"):
             self.validity_indicator = QFrame(parent)
             # expand the coordinates a litle
             e = 4
@@ -174,6 +173,7 @@ class FormItemString(FormItem):
         self.widget = QLineEdit("",parent) # or f[1]
         x,y,w,h = self.form.page_controller.get_coordinates(self.page,f[4:8],dw,dh)
         self.widget.setGeometry(x,y,w,h)
+        self.widget.setToolTip(self.id)
         font = QFont()
         #font =  self.cMailList.item(i,0).font()
         font.setBold(True)
@@ -284,6 +284,7 @@ class FormItemMultiString(FormItem):
         x,y,w,h = self.form.page_controller.get_coordinates(self.page,f[4:8])
         self.widget.setGeometry(x,y,w,h)
         self.widget.setPlainText("") # or f[1]
+        self.widget.setToolTip(self.id)
         font = QFont()
         font.setBold(True)
         self.widget.setFont(font)
@@ -328,6 +329,7 @@ class FormItemRadioButtons(FormItem): # always multiple buttons
             palette = tmpwidget.palette()
             palette.setColor(QPalette.ColorRole.Text,QColor("blue"))
             tmpwidget.setPalette(palette)
+            tmpwidget.setToolTip(self.id)
             self.values.append(f[j])
         self.widget.idClicked.connect(lambda: self.signalValidityCheck.emit(self))
         # temporary hack, probably depends on resolution, will add before scaling to see if that works
@@ -387,6 +389,7 @@ class FormItemCheckBox(FormItem):
         palette.setColor(QPalette.ColorRole.Text,QColor("blue"))
         self.widget.setPalette(palette)
         self.widget.clicked.connect(lambda: self.signalValidityCheck.emit(self))
+        self.widget.setToolTip(self.id)
         # temporary hack, probably depends on resolution, will add before scaling to see if that works
         self.set_print_x_adjust = 3
         self.set_print_y_adjust = 12.5
@@ -408,7 +411,7 @@ class FormItemCheckBox(FormItem):
 
 class FormItemDropDown(FormItem):
     signalValidityCheck = Signal(FormItem)
-    def __init__(self,parent,form,f):
+    def __init__(self,parent,form,f,editable=True):
         dw = 0 # default size
         dh = 26
         super().__init__(parent,form,f)
@@ -419,7 +422,8 @@ class FormItemDropDown(FormItem):
         for i in range(n):
             self.widget.addItem(f[i+8])
         self.widget.setCurrentIndex(-1)
-        self.widget.setEditable(True)
+        self.widget.setEditable(editable)
+        self.widget.setToolTip(self.id)
         palette = self.widget.palette()
         palette.setColor(QPalette.ColorRole.Text,QColor("blue"))
         self.widget.setPalette(palette)
@@ -494,6 +498,7 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
         self.footers = []
         self.fields = [] # a list of FormItem objects
         self.fieldid = {}  # a dictionary that maps the field id to the index
+        self.sort_order = [] # optional, controls output order in message
         self.scale = 1.0
         section = 0 # 1 = headers, 2 = footers, 3 = fields, 4 = dependencies
         oldsection = -1
@@ -521,9 +526,13 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
                         oldsection = section
                         section = 4
                         continue
-                    elif l == "[Dependencies]": # this never happened
+                    elif l == "[SortOrder]":
                         oldsection = section
                         section = 5
+                        continue
+                    elif l == "[Dependencies]": # this never happened
+                        oldsection = section
+                        section = 6
                         continue
                     if oldsection == 3 and section != 3: # we have finished the pages section
                         self.compute_scale_and_fix_pages() # this needs to happen before the controls are placed
@@ -583,7 +592,9 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
                             elif f[1] == "cb":
                                 self.fields.append(FormItemCheckBox(self.cForm,self,f))
                             elif f[1] == "dd":
-                                self.fields.append(FormItemDropDown(self.cForm,self,f))
+                                self.fields.append(FormItemDropDown(self.cForm,self,f,True))
+                            elif f[1] == "hdd": # "Hard" drop down, cannot be editted
+                                self.fields.append(FormItemDropDown(self.cForm,self,f,False))
                             elif f[1] == "anyg":
                                 self.fields.append(FormItemAnyGroup(self.cForm,self,f))
                             elif f[1] == "allg":
@@ -592,8 +603,9 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
                                 if f[0]:
                                     self.fieldid[f[0]] = index
                                 self.fields[index].signalValidityCheck.connect(self.updateSingle)
-
                     elif section == 5:
+                        self.sort_order.append(l)
+                    elif section == 6:
                         pass
         except FileNotFoundError:
             pass
@@ -656,9 +668,7 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
         assert(self.pages)
         tmp = QPixmap(self.pages[0][0])
         w = tmp.width()
-        if not w:
-            return
-        scale = 850/w
+        self.scale = 850/w if w else 0.0
 
         h = 0
         # pages is a tuple (filename,startline,numlines)
@@ -777,11 +787,7 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
             message = ""
             for h in self.headers:
                 message += h + "\n"
-            for f in self.fields:
-                if f.include_in_output():
-                    v = f.get_value()
-                    if v:
-                        message += f"{f.id}: [{v}]\n"
+            message += self.central_section()
             for f in self.footers:
                 message += f + "\n"
             handling = self.get_value_by_id("5.")
@@ -789,6 +795,58 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
             subject = self.get_value_by_id("MsgNo") + "_" + handling[0] + "_" + self.formid + "_" + self.get_value_by_id(self.subjectlinesource) 
         global_signals.signal_new_outgoing_form_message.emit(subject,message,handling[0] == 'I',self.to_addr)
         self.close()
+
+    @staticmethod
+    def split_id_for_sorting(s:str,v:str):
+        # count digits at start
+        i = 0
+        for c in s:
+            if not ord('0') <= ord(c) <= ord('9'):
+                break
+            i += 1
+        if i:
+            return (int(s[:i]),s[i:],v)
+        else:
+            return (999999,s,v)
+    
+
+
+    def central_section(self) -> str:
+        r = ""
+        if self.sort_order:
+            # pass 1 - separate the fields with an explicit order from the rest
+            list1 = {} # dictionary [] # this is a list of pairs (id,value)
+            list2 = [] # this is a list of tuples (int,str,value)
+            for f in self.fields:
+                if f.include_in_output():
+                    v = f.get_value()
+                    if v:
+                        if f.id in self.sort_order:
+                            list1[f.id] = f"{f.id}: [{v}]\n"
+                        else:
+                            list2.append(self.split_id_for_sorting(f.id,f"{f.id}: [{v}]\n"))
+#            # if we are very lucky and all fields are explicit, we are done
+#            if not list2:
+#                return "".join(list1)
+            # sort list2 using default sorting (numeric+alpha)
+            list2.sort()
+            for i in self.sort_order:
+                if i.startswith("<"): # this is the flag where the rest if the stuff goes, usually "<the rest>"
+                    for i,s,v in list2:
+                        r += v;
+                else:
+                    try:
+                        r += list1[i]
+                    except KeyError:
+                        pass
+        else:
+            # no sort order, this is easy
+            for f in self.fields:
+                if f.include_in_output():
+                    v = f.get_value()
+                    if v:
+                        r += f"{f.id}: [{v}]\n"
+        return r
 
     def on_print(self):
         printer = QPrinter(QPrinter.PrinterMode.HighResolution)
