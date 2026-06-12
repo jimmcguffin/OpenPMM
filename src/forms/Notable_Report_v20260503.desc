@@ -19,7 +19,7 @@ MsgNo,str,,P1,327,67,138,22
 7a.,dd,Y,P1,203,171,213,22,Situational Analysis Unit,Common Operating Picture Spec.,Planning
 7b.,str,Y,P1,203,195,213,22
 7c.,str,,P1,203,222,213,20
-8d.,str,,P1,568,249,214,20
+7d.,str,,P1,203,249,213,20
 8a.,str,Y,P1,568,171,214,22
 8b.,str,Y,P1,568,195,214,22
 8c.,str,,P1,568,222,214,20
