@@ -485,9 +485,10 @@ class FormItemAllGroup(FormItem):
     
 
 class FormDialog(QMainWindow,Ui_FormDialogClass):
-    def __init__(self,pd,form,formid,parent=None):
+    def __init__(self,pd,basepath,form,formid,parent=None):
         super().__init__(parent)
         self.pd = pd
+        self.basepath = basepath
         self.form = form # the name of the desc and png files
         self.formid = formid # a short item used in the subject line
         self.to_addr = "" # this get used when redoing a form
@@ -503,7 +504,7 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
         section = 0 # 1 = headers, 2 = footers, 3 = fields, 4 = dependencies
         oldsection = -1
         try:
-            with open(form,"rt") as file:
+            with open(basepath+form,"rt") as file:
                 while l := file.readline():
                     if comment := l.find("//") >= 0:
                         l = l[:comment]
@@ -554,10 +555,10 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
                                 # someimes nl is -1, means the size of the image
                                 # I used to do this computation elsewhere, but the immutable-ness of tuples was messing me up
                                 if nl < 0:
-                                    nl = QPixmap(m.group(1)).height() - l1
+                                    nl = QPixmap(self.basepath+m.group(1)).height() - l1
                                 self.pages.append((m.group(1),l0,nl)) # specific lines
                         else:
-                            nl = QPixmap(l).height()
+                            nl = QPixmap(self.basepath+l).height()
                             self.pages.append((l,0,nl)) # all lines
                     elif section == 4:
                         f = l.split(",")
@@ -657,7 +658,7 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
         self.scale = 1.0
         # temporarily read first one
         assert(self.pages)
-        tmp = QPixmap(self.pages[0][0])
+        tmp = QPixmap(self.basepath+self.pages[0][0])
         w = tmp.width()
         self.scale = 850/w if w else 0.0
 
@@ -666,7 +667,7 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
         # all x/y/w/h values are in 100ths of an inch, which for 850x1100 images is the same as pixels
         # if the images are any other size, force them to be 850 wide, which will cause a scaling of the items in the "Pages" section (those are always pixels)
         assert(self.pages)
-        tmp = QPixmap(self.pages[0][0])
+        tmp = QPixmap(self.basepath+self.pages[0][0])
         w = tmp.width()
         self.scale = 850/w if w else 0.0
 
@@ -678,7 +679,7 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
         painter = QPainter(pm)
         y = 0
         for page in self.pages:
-            pm2 = QPixmap(page[0])
+            pm2 = QPixmap(self.basepath+page[0])
             # painter.drawPixmap(QPoint(0,h),pm2,QRect(0,page[1],850,page[2]))
             painter.drawPixmap(QRect(0,y,850,page[2]*self.scale),pm2,QRect(0,page[1],w,page[2]))
             y += page[2]*self.scale
@@ -878,7 +879,7 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
 
         for index,page in enumerate(self.pages):
             # figure out if this page should be printed based on operator settings
-            pm2 = QPixmap(page[0])
+            pm2 = QPixmap(self.basepath+page[0])
             painter.drawPixmap(QRect(0,0,printer.width(),printer.height()),pm2,QRect(0,0,pm2.width(),pm2.height()))
             for f in self.fields:
                 if f.page == index:

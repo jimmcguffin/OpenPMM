@@ -98,15 +98,25 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         self.setupUi(self)
         self.actionNew_Message.triggered.connect(self.on_new_message)
         self.forms = []
+        if getattr(sys,'frozen',False):
+            # Running in a PyInstaller bundle
+            self.forms_path = sys._MEIPASS + "/forms/"
+        else:
+            self.forms_path = "forms/"
+
         #action = self.menuForms.addAction("ICS 309 Communications Log")
         #action.triggered.connect(self.on_ics309_builder)
         #self.menuForms.addSeparator()
         try:
-            with open("forms.csv","rt",encoding="windows-1252") as file:
+
+            with open(self.forms_path+"forms.csv","rt",encoding="windows-1252") as file:
                 for line in file.readlines():
                     line = line.rstrip()
                     if not line: continue
-                    if line[0] == '#': continue
+                    if line[0] == '#': 
+                        if "break" in line:
+                            self.menuForms.addSeparator()
+                        continue
                     f = line.split(",")
                     if len(f) < 3: continue
                     index = len(self.forms)
@@ -470,7 +480,7 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
     def on_new_form(self):
         widget = self.sender()
         index = widget.property("FormIndex")
-        tmp = formdialog.FormDialog(self.settings,self.forms[index][2],self.forms[index][1],self)
+        tmp = formdialog.FormDialog(self.settings,self.forms_path,self.forms[index][2],self.forms[index][1],self)
         tmp.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         tmp.show()
         tmp.raise_()
@@ -1092,10 +1102,6 @@ if __name__ == "__main__":
     #     p.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
     #     p.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.white)
     #     app.setPalette(p)
-
-    #x = b'`1\\$m>)k/`"4:'
-    #print(90.0-monitordialog.MonitorDialog.base91_decode(x[2:6])/380926)
-    print((180.0+monitordialog.MonitorDialog.base91_decode(x[6:10])/190463)-360)
 
     mainwindow = MainWindow()
     mainwindow.show()

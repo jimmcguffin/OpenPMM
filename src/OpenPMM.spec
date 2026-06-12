@@ -5,7 +5,7 @@ a = Analysis(
     ['mainwindow.py'],
     pathex=[],
     binaries=[],
-    datas=[("forms.csv","."),("*.png","."),("*.desc",".")],
+    datas=[("forms/forms.csv","forms"),("forms/*.desc","forms"),("forms/*.png","forms")],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -40,5 +40,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='mainwindow',
+    name='openpmm',
 )
