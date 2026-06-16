@@ -97,7 +97,7 @@ class FormItem(QObject):
             self.validity_indicator.setFrameStyle(QFrame.Shape.Box|QFrame.Shadow.Plain)
             self.validity_indicator.hide()
 
-    def get_value(self): 
+    def get_value(self,for_output_file=False): 
         pass
 
     def is_valid(self):
@@ -183,7 +183,7 @@ class FormItemString(FormItem):
         self.widget.setPalette(palette)
         self.widget.textChanged.connect(lambda: self.signalValidityCheck.emit(self))
 
-    def get_value(self):
+    def get_value(self,for_output_file=False):
         return self.widget.text()
 
     def set_value(self,value):
@@ -293,7 +293,7 @@ class FormItemMultiString(FormItem):
         self.widget.setPalette(palette)
         self.widget.textChanged.connect(lambda: self.signalValidityCheck.emit(self))
 
-    def get_value(self):
+    def get_value(self,for_output_file=False):
         return self.widget.toPlainText().replace("]","`]").replace("\n","\\n")
 
     def set_value(self,value):
@@ -336,7 +336,7 @@ class FormItemRadioButtons(FormItem): # always multiple buttons
         self.set_print_x_adjust = 3
         self.set_print_y_adjust = 12.5
 
-    def get_value(self):
+    def get_value(self,for_output_file=False):
         # this does not work when the initial seletion is made using setChecked
         for index, b in enumerate(self.widget.buttons()):
             if b.isChecked():
@@ -394,7 +394,7 @@ class FormItemCheckBox(FormItem):
         self.set_print_x_adjust = 3
         self.set_print_y_adjust = 12.5
 
-    def get_value(self):
+    def get_value(self,for_output_file=False):
         return "checked" if self.widget.isChecked() else ""
 
     def set_value(self,value):
@@ -418,9 +418,18 @@ class FormItemDropDown(FormItem):
         self.widget = QComboBox(parent) # or f[1]
         x,y,w,h = self.form.page_controller.get_coordinates(self.page,f[4:8],dw,dh)
         self.widget.setGeometry(x,y,w,h)
+        self.hasuserdata = False
+        self.userdata = {}
         n = len(f)-8
-        for i in range(n):
-            self.widget.addItem(f[i+8])
+        if "=" in f[8]:
+            self.hasuserdata = True
+            for i in range(n):
+                v,_,l = f[i+8].partition("=")
+                self.widget.addItem(l,v)
+                self.userdata[v] = l
+        else:
+            for i in range(n):
+                self.widget.addItem(f[i+8])
         self.widget.setCurrentIndex(-1)
         self.widget.setEditable(editable)
         self.widget.setToolTip(self.id)
@@ -429,10 +438,16 @@ class FormItemDropDown(FormItem):
         self.widget.setPalette(palette)
         self.widget.currentTextChanged.connect(lambda: self.signalValidityCheck.emit(self))
 
-    def get_value(self):
+    def get_value(self,for_output_file=False):
+        f1 = self.widget.currentText()
+        f2 = self.widget.currentData()
+        if self.hasuserdata and for_output_file:
+            return self.widget.currentData()
         return self.widget.currentText()
 
     def set_value(self,value):
+        if self.hasuserdata and value in self.userdata:
+            return self.widget.setCurrentText(self.userdata[value])
         return self.widget.setCurrentText(value)
 
 # this class returns valid if any child item is valid
@@ -844,7 +859,7 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
             # no sort order, this is easy
             for f in self.fields:
                 if f.include_in_output():
-                    v = f.get_value()
+                    v = f.get_value(True)
                     if v:
                         r += f"{f.id}: [{v}]\n"
         return r

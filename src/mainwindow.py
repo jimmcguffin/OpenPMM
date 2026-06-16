@@ -551,7 +551,7 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
                     f1,_,_ = f[1].partition(" or ")
                     if s[2] == f1 or s[2] == f[2]:
                         isform = True
-                        tmp = formdialog.FormDialog(self.settings,f[2],f[1],self)
+                        tmp = formdialog.FormDialog(self.settings,self.forms_path,f[2],f[1],self)
                         tmp.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
                         tmp.prepopulate(h,m)
                         tmp.show()
@@ -579,8 +579,8 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             self.update_mail_list()
 
     def on_read_message_form(self,row):
-        # the just calls the auto-detector that double-clicking calls
-        self.on_read_message(self,row,0)
+        # this just calls the auto-detector that double-clicking calls
+        self.on_read_message(row,0)
 
     def open_io_device(self,logfile_name=None): # todo: allow tcp, files, others
         if self.settings.getInterface("ConnectionType") == "Network":
@@ -831,7 +831,7 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
                         elif line == "[END]":
                             if m and mbh.flags:
                                 # temp - discard test messages
-                                if mbh.to_addr.upper().startswith("KW6W") and mbh.from_addr.upper().startswith("KW6W"):
+                                if mbh.to_addr.upper().startswith("K6GX") and mbh.from_addr.upper().startswith("K6GX"):
                                     continue
                                 self.mailbox.add_mail(mbh,m,MailFlags.FOLDER_NONE) # mbh.flags has already been sent
                                 # "Hea" (headers) are the actual headers

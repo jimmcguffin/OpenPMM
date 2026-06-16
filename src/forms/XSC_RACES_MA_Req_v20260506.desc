@@ -31,32 +31,32 @@ MsgNo,str,,P1,317,69,133,22
 18.1b.,hdd,,P1,258,459,135,20,Field Communicator,Net Control Operator,Packet Operator,Shadow Communicator
 18.1f.,str,,P1,420,459,175,20
 18.1g.,cb,,P1,610,469,0,0
-18.1c.,hdd,,P1,636,459,65,20,1,2,3,4,5
-18.1d.,hdd,,P1,727,459,65,20,1,2,3,4,5
+18.1c.,hdd,Y,P1,636,459,65,20,0=,1=Level 1,2=Level 2,3=Level 3,4=IV,5=V
+18.1d.,hdd,,P1,727,459,65,20,0=,1=Level 1,2=Level 2,3=Level 3,4=IV,5=V
 18.2a.,nstr,,P1,208,486,25,20
 18.2b.,hdd,,P1,258,486,135,20,Field Communicator,Net Control Operator,Packet Operator,Shadow Communicator
 18.2f.,str,,P1,420,486,175,20
 18.2g.,cb,,P1,610,496,0,0
-18.2c.,hdd,,P1,636,486,65,20,1,2,3,4,5
-18.2d.,hdd,,P1,727,486,65,20,1,2,3,4,5
+18.2c.,hdd,,P1,636,486,65,20,0=,1=Level 1,2=Level 2,3=Level 3,4=IV,5=V
+18.2d.,hdd,,P1,727,486,65,20,0=,1=Level 1,2=Level 2,3=Level 3,4=IV,5=V
 18.3a.,nstr,,P1,208,511,25,20
 18.3b.,hdd,,P1,258,511,135,20,Field Communicator,Net Control Operator,Packet Operator,Shadow Communicator
 18.3f.,str,,P1,420,511,175,20
 18.3g.,cb,,P1,610,521,0,0
-18.3c.,hdd,,P1,636,511,65,20,1,2,3,4,5
-18.3d.,hdd,,P1,727,511,65,20,1,2,3,4,5
+18.3c.,hdd,,P1,636,511,65,20,0=,1=Level 1,2=Level 2,3=Level 3,4=IV,5=V
+18.3d.,hdd,,P1,727,511,65,20,0=,1=Level 1,2=Level 2,3=Level 3,4=IV,5=V
 18.4a.,nstr,,P1,208,539,25,20
 18.4b.,hdd,,P1,258,539,135,20,Field Communicator,Net Control Operator,Packet Operator,Shadow Communicator
 18.4f.,str,,P1,420,539,175,20
 18.4g.,cb,,P1,610,549,0,0
-18.4c.,hdd,,P1,636,539,65,20,1,2,3,4,5
-18.4d.,hdd,,P1,727,539,65,20,1,2,3,4,5
+18.4c.,hdd,,P1,636,539,65,20,0=,1=Level 1,2=Level 2,3=Level 3,4=IV,5=V
+18.4d.,hdd,,P1,727,539,65,20,0=,1=Level 1,2=Level 2,3=Level 3,4=IV,5=V
 18.5a.,nstr,,P1,208,566,25,20
 18.5b.,hdd,,P1,258,566,135,20,Field Communicator,Net Control Operator,Packet Operator,Shadow Communicator
 18.5f.,str,,P1,420,566,175,20
 18.5g.,cb,,P1,610,576,0,0
-18.5c.,hdd,,P1,636,566,65,20,1,2,3,4,5
-18.5d.,hdd,,P1,727,566,65,20,1,2,3,4,5
+18.5c.,hdd,,P1,636,566,65,20,0=,1=Level 1,2=Level 2,3=Level 3,4=IV,5=V
+18.5d.,hdd,,P1,727,566,65,20,0=,1=Level 1,2=Level 2,3=Level 3,4=IV,5=V
 19a.,dstr,,P1,260,623,80,20
 19b.,tstr,,P1,616,623,60,20
 20a.,dstr,,P1,257,651,80,20
