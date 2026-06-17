@@ -134,6 +134,8 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         self.actionMessage_Settings.triggered.connect(self.onMessageSettings)
         self.actionGeneral_Settings.triggered.connect(self.onGeneralSettings)
         self.actionDelete.triggered.connect(self.on_delete_messages)
+        self.actionSet_to_Read.triggered.connect(self.on_mark_messages_as_read)
+        self.actionSet_to_Unread.triggered.connect(self.on_mark_messages_as_unread)
         self.cProfile.currentTextChanged.connect(self.onProfileChanged)
         self.actionNewProfile.triggered.connect(self.onNewProfile)
         self.cMailList.cellDoubleClicked.connect(self.on_read_message)
@@ -773,6 +775,18 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         self.mailbox.move_mail(indexlist,self.currentFolder,MailFlags.FOLDER_DELETED)
         self.update_mail_list()
 
+    def on_mark_messages_as_read(self):
+        for item in self.cMailList.selectedItems():
+            if item.column() == 0:
+                self.mailbox.mark_as_new(self.mailIndex[item.row()],False)
+        self.update_mail_list()
+
+    def on_mark_messages_as_unread(self):
+        for item in self.cMailList.selectedItems():
+            if item.column() == 0:
+                self.mailbox.mark_as_new(self.mailIndex[item.row()],True)
+        self.update_mail_list()
+
     def on_archive_messages(self):
         indexlist = []
         for item in self.cMailList.selectedItems():
@@ -1073,36 +1087,3 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             QMessageBox.information(self,"Search","No messages found")
 
 
-if __name__ == "__main__": 
-    app = QApplication(sys.argv)
-    app.setStyle(QStyleFactory.create("Fusion"))
-    darkmode = False
-    i = 1
-    while i < len(sys.argv):
-        if sys.argv[i] == "-dark":
-            darkmode = True
-        # elif sys.argv[i] == "-x":
-        #     i += 1
-        #     z = int(sys.argv[i])
-        i += 1
-        
-    # if darkmode: # the forms look vary bad in this mode
-    #     p = QPalette()
-    #     p.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
-    #     p.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
-    #     p.setColor(QPalette.ColorRole.Base, QColor(42, 42, 42)) # the color of QTableWidgets
-    #     p.setColor(QPalette.ColorRole.AlternateBase, QColor(66, 66, 66))
-    #     p.setColor(QPalette.ColorRole.ToolTipBase, Qt.GlobalColor.white)
-    #     p.setColor(QPalette.ColorRole.ToolTipText, Qt.GlobalColor.white)
-    #     p.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.white)
-    #     p.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
-    #     p.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.white)
-    #     p.setColor(QPalette.ColorRole.BrightText, Qt.GlobalColor.red)
-    #     p.setColor(QPalette.ColorRole.Link, QColor(42, 130, 218))
-    #     p.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
-    #     p.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.white)
-    #     app.setPalette(p)
-
-    mainwindow = MainWindow()
-    mainwindow.show()
-    sys.exit(app.exec())

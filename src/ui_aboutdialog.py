@@ -58,7 +58,7 @@ class Ui_AboutDialog(object):
         AboutDialog.setWindowTitle(QCoreApplication.translate("AboutDialog", u"About OpenPMM", None))
         self.label.setText(QCoreApplication.translate("AboutDialog", u"Open Packet Message Manager", None))
         self.label_2.setText(QCoreApplication.translate("AboutDialog", u"Version 0.5", None))
-        self.label_3.setText(QCoreApplication.translate("AboutDialog", u"Copyright \u00a9 2025-2026 Jim McGuffin KW6W", None))
+        self.label_3.setText(QCoreApplication.translate("AboutDialog", u"Copyright \u00a9 2025-2026 Jim McGuffin K6GX", None))
         self.label_4.setText(QCoreApplication.translate("AboutDialog", u"Based very heavily on Outpost by Jim Oberhofer KN6PE", None))
         self.label_5.setText(QCoreApplication.translate("AboutDialog", u"Licensed under GPLv2", None))
         self.pushButton.setText(QCoreApplication.translate("AboutDialog", u"License", None))
