@@ -28,12 +28,13 @@ from urllib.parse import quote_plus,unquote_plus
 from PySide6.QtCore import Qt,QIODeviceBase,QTimer,QDateTime,qDebug
 from PySide6.QtGui import QAction, QPalette, QColor
 from PySide6.QtSerialPort import QSerialPortInfo, QSerialPort
-from PySide6.QtWidgets import QMainWindow, QInputDialog, QMessageBox, QApplication, QStyleFactory, QLabel, QFrame, QStatusBar, QTableWidgetItem, QFileDialog, QMessageBox, QMenu
+from PySide6.QtWidgets import QMainWindow, QInputDialog, QMessageBox, QLabel, QFrame, QStatusBar, QTableWidgetItem, QFileDialog, QMessageBox, QMenu
 from PySide6.QtNetwork import QUdpSocket, QHostAddress
 
 
 import aboutdialog
 import bbsdialog
+from bbsparser import Jnos2Parser
 import formdialog
 import generalsettingsdialog
 from globalsignals import global_signals
@@ -50,6 +51,7 @@ from serialstream import Level1,LineParser,KissParser
 import sendreceivesettingsdialog
 from sql_mailbox import MailBox, MailBoxHeader, MailFlags, FieldsToSearch
 import stationiddialog
+from tncparser import TAPR_Device
 from ui_mainwindow import Ui_MainWindowClass
 
 def atoi(ss:str) -> int:
