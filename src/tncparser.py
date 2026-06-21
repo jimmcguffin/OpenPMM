@@ -262,6 +262,7 @@ class KISS_Device(TncDevice):
         super().__init__(pipeline,pd)
         self.mycall = ""
         self.bytes_already_searched = 0
+        self.bbs = None
 
     def start_session(self,mailbox,srflags:int,sendimmediate:list[int]=None):
         super().start_session(l1,lp,mailbox,srflags,sendimmediate)

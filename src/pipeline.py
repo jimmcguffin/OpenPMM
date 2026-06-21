@@ -29,6 +29,7 @@ class Pipeline(QObject):
         self.mailbox = None
         self.srflags = 0
         self.sendimmediate = None
+        self.bbs = None
 
     def start_session(self,mycalls:tuple[str,str],bbscall:str,mailbox,srflags:int,sendimmediate:list[int]=None):
         self.mycalls = mycalls
