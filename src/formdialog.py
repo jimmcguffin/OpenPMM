@@ -421,7 +421,7 @@ class FormItemDropDown(FormItem):
         self.hasuserdata = False
         self.userdata = {}
         n = len(f)-8
-        if "=" in f[8]:
+        if n > 0 and "=" in f[8]:
             self.hasuserdata = True
             for i in range(n):
                 v,_,l = f[i+8].partition("=")

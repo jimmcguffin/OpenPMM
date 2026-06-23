@@ -11,7 +11,7 @@ Allied_Health_Status_Report_v20260506-1.png[0:3039]
 Allied_Health_Status_Report_v20260506-2.png[300:1391]
 
 [Fields]
-MsgNo,str,Y,P1,327,110,115,22
+MsgNo,str,Y,P1,327,102,115,22
 1a.,dstr,Y,P1,111,174,75,22
 1b.,tstr,Y,P1,258,174,64,22
 5.,rb,Y,P1,413,169,381,28,IMMEDIATE,430,181,0,0,PRIORITY,564,181,0,0,ROUTINE,677,181,0,0

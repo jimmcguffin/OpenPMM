@@ -8,8 +8,8 @@
 
 [Pages]
 Situation_Report_v20260503-1.png[0:2637]
-Situation_Report_v20260503-2.png[206:2921]
-Situation_Report_v20260503-3.png[206:1941]
+Situation_Report_v20260503-2.png[207:2921]
+Situation_Report_v20260503-3.png[207:1941]
 
 [Fields]
 MsgNo,str,,P1,327,87,133,22
@@ -34,7 +34,7 @@ MsgNo,str,,P1,327,87,133,22
 26.,mstr,,P1,215,549,569,70
 30.,str,,P1,167,651,242,20
 31.,nstr,,P1,560,649,223,20
-32.,estr,,P1,101,675,683,22
+32.,estr,,P1,129,675,653,22
 50.,rb,,P1,235,723,421,20,Unknown,265,733,0,0,Open,415,733,0,0,Closed,565,733,0,0
 51d.,dstr,,P1,251,749,75,20
 51t.,tstr,,P1,492,749,60,20
