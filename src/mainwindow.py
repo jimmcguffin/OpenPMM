@@ -423,9 +423,9 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         if not port:
             QMessageBox.critical(self,"Error",f"Error serial port has not been configuired, go to Setup/Interface")
             return
-        f = self.open_io_device()
+        f,e = self.open_io_device()
         if not f:
-            QMessageBox.critical(self,"Error",f"Error {self.io_device.errorString()} opening serial port")
+            QMessageBox.critical(self,"Error",f"Error \"{e} opening interface")
             return
 
 ##        if self.settings.getInterface("Type") == "KISS":
@@ -454,9 +454,9 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             return
         # port = port.partition('/')[0].rstrip()
 
-        f = self.open_io_device()
+        f,e = self.open_io_device()
         if not f:
-            QMessageBox.critical(self,"Error",f"Error {self.io_device.errorString()} opening serial port")
+            QMessageBox.critical(self,"Error",f"Error \"{e}\" opening interface")
             return
         if mode:
             self.io_device.write(b"INTFACE KISS\r")
@@ -598,14 +598,14 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         in_port = out_port + 1
         self.io_device.bind(in_port)
         self.io_device.out_params = (QHostAddress(self.settings.getInterface("NetworkIpAddress")),out_port)
-        return True
+        return (True,"")
     
     def open_serial_port(self,logfile_name=None):
         self.io_device = Level1(QSerialPort(),logfile_name)
         # get all relevant settings - remember that at this point they are all strings
         port = self.settings.getInterface("ComPort")
         if not port:
-            return False
+            return (False,"No serial port specified")
         port = port.partition('/')[0].rstrip()
         baud = self.settings.getInterface("Baud")
         parity = self.settings.getInterface("Parity")
@@ -641,12 +641,12 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         f = sp.open(QIODeviceBase.OpenModeFlag.ReadWrite)
         if not f:
             print(f"open serial port {sp.portName()} failed, returned {sp.errorString()}")
-            return False
+            return (False,sp.errorString())
         print(f"open serial port {sp.portName()} succeeded {sp.baudRate()} {sp.parity()} {sp.dataBits()} {sp.stopBits()} {sp.flowControl()}")
         if flowcontrolflag != 'R':
             sp.setDataTerminalReady(True)
             sp.setRequestToSend(True)
-        return True
+        return (True,"")
     
     def on_send_receive(self,send:bool,recv:bool,sendimmediate:list[int]=None):
         # if a cycle was in progress, cancel it
@@ -658,9 +658,9 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             return
         # port = port.partition('/')[0].rstrip()
 
-        f = self.open_io_device("serial.log") # this step creates self.io_device
+        f,e = self.open_io_device("serial.log") # this step creates self.io_device
         if not f:
-            QMessageBox.critical(self,"Error",f"Error {self.io_device.errorString()} opening serial port")
+            QMessageBox.critical(self,"Error",f"Error \"{e}\" opening interface")
             return
 
         global_signals.signal_new_incoming_message.connect(self.on_new_incoming_message)

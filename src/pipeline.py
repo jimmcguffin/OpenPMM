@@ -69,6 +69,8 @@ class TAPR_Pipeline(Pipeline):
             self.bbs = Jnos2Parser(self.pd,False)
         if not self.bbs:
             return
+        if not self.tnc_parser:
+            return
         self.tnc_parser.signal_bytes_ready.connect(self.bbs.on_bytes_ready)
         self.bbs.signal_write.connect(self.l1.write)
         self.bbs.start_session(self,self.mailbox,self.srflags,self.sendimmediate)
@@ -128,7 +130,8 @@ class KISS_Pipeline(Pipeline):
         self.bbs.start_session(self,self.mailbox,self.srflags,self.sendimmediate)
 
     def set_line_end(self,le:bytes,include_line_end_in_reply=True):
-        self.line_parser.set_line_end(le.replace(b"\r\n",b"\r"),include_line_end_in_reply)
+        if self.line_parser:
+            self.line_parser.set_line_end(le.replace(b"\r\n",b"\r"),include_line_end_in_reply)
 
     def stop_session(self):
         self.remove_bbs()
