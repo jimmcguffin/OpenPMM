@@ -220,6 +220,7 @@ class TAPR_Device(TncDevice):
 				"CommandRetry":"retry",
 				"CommandConvers":"convers",
 				"CommandDayTime":"daytime",
+				"CommandKiss":"intface kiss",
          }
     
     @staticmethod

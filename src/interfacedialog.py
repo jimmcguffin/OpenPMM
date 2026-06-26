@@ -64,6 +64,7 @@ class InterfaceDialog(QDialog,Ui_InterfaceDialogClass):
         self.cCommandRetry.setText(self.pd.getInterface("CommandRetry"))
         self.cCommandConvers.setText(self.pd.getInterface("CommandConvers"))
         self.cCommandDayTime.setText(self.pd.getInterface("CommandDayTime"))
+        self.cCommandKissMode.setText(self.pd.getInterface("CommandKiss"))
         self.cIncludeCommandPrefix.setChecked(self.pd.getInterfaceBool("IncludeCommandPrefix"))
         self.cCommandPrefix.setText(self.pd.getInterface("CommandPrefix"))
         # page 6
@@ -116,6 +117,7 @@ class InterfaceDialog(QDialog,Ui_InterfaceDialogClass):
         self.pd.setInterface("CommandRetry",self.cCommandRetry.text())
         self.pd.setInterface("CommandConvers",self.cCommandConvers.text())
         self.pd.setInterface("CommandDayTime",self.cCommandDayTime.text())
+        self.pd.setInterface("CommandKiss",self.cCommandKissMode.text())
         self.pd.setInterface("IncludeCommandPrefix",self.cIncludeCommandPrefix.isChecked())
         self.pd.setInterface("CommandPrefix",self.cCommandPrefix.text())
         # page 6

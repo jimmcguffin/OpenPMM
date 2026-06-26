@@ -459,7 +459,8 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             QMessageBox.critical(self,"Error",f"Error \"{e}\" opening interface")
             return
         if mode:
-            self.io_device.write(b"INTFACE KISS\r")
+            kisson = bytes(self.settings.getInterface("CommandKiss","INTFACE KISS")+"\r","utf-8")
+            self.io_device.write(kisson)
             self.io_device.write(b"RESET\r")
             QTimer.singleShot(4000,self._tmp1)
         else:
