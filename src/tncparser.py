@@ -5,11 +5,7 @@ from datetime import datetime
 from enum import IntEnum
 
 
-import ax25
-from ax25v20_controller import AX25_Controller
-from bbsparser import Jnos2Parser
 from globalsignals import global_signals
-from serialstream import Level1
 from sql_mailbox import MailBoxHeader
 from PySide6.QtCore import QObject, Signal, QTimer, qDebug
 from persistentdata import PersistentData
@@ -65,13 +61,22 @@ class TncDevice(QObject):
 #                          mactches_ignore_case("disconnect","disp") should return False
 
 
+class TAPR_Variant(IntEnum):
+    UNKNOWN = 0
+    KPC3PLUS = 1
+    KPC3 = 2
+    OPENTNC = 3
+
 # maybe this class should be called TAPR
 # todo: need to implement time-out/retry stuff in both this class and bbsparser
 class TAPR_Device(TncDevice):
     def __init__(self,pipeline,pd):
         super().__init__(pipeline,pd)
+        self.tapr_variant = TAPR_Variant.UNKNOWN
+        self.tapr_variant = self.find_variant(self.pd.getActiveInterface())
+
         self.message_queue = deque()
-        self.using_echo = False
+        self.using_echo = True
         self.special_disconnect_value = "\x03\x03\x03*** Disconnect\r" # tells the session to end
         self.in_passthru_mode = False
 
@@ -86,6 +91,8 @@ class TAPR_Device(TncDevice):
         connectstr = f"{self.get_command("CommandConnect")} {self.pd.getBBS("ConnectName")}\r"
         # these are internally generated
         # self.send(b"\r") // flush out any half-written commands
+        # only some TNCs accept ^c
+        #if self.tapr_variant in (TAPR_Variant.KPC3,TAPR_Variant.KPC3PLUS):
         self.send("\x03\r")
         self.send("disconnect\r")
         if self.using_echo:
@@ -130,7 +137,9 @@ class TAPR_Device(TncDevice):
     def is_valid_query_response(self,q,r):
         if self.using_echo: # is much simpler in this case
             # ignore any ctrl-c's
-            if q[0] == '\x03': q = q[1:]
+#            if q[0] == '\x03': q = q[1:]
+            if q[0] == '\x03':
+                return True
             qDebug(f"TNC: <<{q.replace("\r","|")}>> returned <<{r.replace("\r","|").replace("\n","|")}>>")
             return r.startswith(q)
         else:
@@ -196,7 +205,18 @@ class TAPR_Device(TncDevice):
             # self.io_device.write(self.message_queue[0]) this did NOT work
 
     @staticmethod
-    def get_default_prompts():
+    def find_variant(s:str):
+        tmp = s.lower()
+        if "kpc3_plus" in tmp:
+            return TAPR_Variant.KPC3PLUS
+        elif "kpc3" in tmp:
+            return TAPR_Variant.KPC3
+        elif "opentnc" in tmp:
+            return TAPR_Variant.OPENTNC
+        return TAPR_Variant.UNKNOWN
+
+    @staticmethod
+    def get_default_prompts(s:str):
         return  [
 			("PromptCommand","cmd:"),
 			("PromptTimeout","*** retry count exceeded"),
@@ -213,115 +233,130 @@ class TAPR_Device(TncDevice):
         return "<"+s+">" # this will never work but it will show in the log as a problem
 
     @staticmethod
-    def get_default_commands():
-         return {
-				"CommandMyCall":"my",
-				"CommandConnect":"connect",
-				"CommandRetry":"retry",
-				"CommandConvers":"convers",
-				"CommandDayTime":"daytime",
-				"CommandKiss":"intface kiss",
-         }
+    def get_default_commands(s:str):
+        match TAPR_Device.find_variant(s):
+            case TAPR_Variant.UNKNOWN:
+                return {}
+            case TAPR_Variant.KPC3PLUS:
+                return {
+                    "CommandMyCall":"my",
+                    "CommandConnect":"connect",
+                    "CommandRetry":"retry",
+                    "CommandConvers":"convers",
+                    "CommandDayTime":"daytime",
+                    "CommandKiss":"intface kiss;reset",
+                }
+            case TAPR_Variant.KPC3:
+                return {
+                    "CommandMyCall":"my",
+                    "CommandConnect":"connect",
+                    "CommandRetry":"retry",
+                    "CommandConvers":"convers",
+                    "CommandDayTime":"daytime",
+                    "CommandKiss":"intface kiss;reset",
+                }
+            case TAPR_Variant.OPENTNC:
+                return {
+                    "CommandMyCall":"my",
+                    "CommandConnect":"connect",
+                    "CommandRetry":"retry",
+                    "CommandConvers":"convers",
+                    "CommandDayTime":"daytime",
+                    "CommandKiss":"kiss now",
+                }
     
     @staticmethod
-    def get_default_before_init_commands():
-        return [
-            "INTFACE TERMINAL",
-            "CD SOFTWARE",
-            "NEWMODE ON",
-            "8BITCONV ON",
-            "BEACON EVERY 0",
-            "SLOTTIME 10",
-            "PERSIST 63",
-            "PACLEN 128",
-            "MAXFRAME 2",
-            "FRACK 6",
-            "RETRY 8",
-            "CHECK 30",
-            "TXDELAY 40",
-            "XFLOW OFF",
-            "SENDPAC $05",
-            "CR OFF",
-            "PACTIME AFTER 2",
-            "CPACTIME ON",
-            "STREAMEV OFF",
-            "STREAMSW $00",
-        ]
+    def get_default_before_init_commands(s:str):
+        match TAPR_Device.find_variant(s):
+            case TAPR_Variant.KPC3PLUS:
+                return [
+                    "INTFACE TERMINAL",
+                    "CD SOFTWARE",
+                    "NEWMODE ON",
+                    "8BITCONV ON",
+                    "BEACON EVERY 0",
+                    "SLOTTIME 10",
+                    "PERSIST 63",
+                    "PACLEN 128",
+                    "MAXFRAME 2",
+                    "FRACK 6",
+                    "RETRY 8",
+                    "CHECK 30",
+                    "TXDELAY 40",
+                    "XFLOW OFF",
+                    "SENDPAC $05",
+                    "CR OFF",
+                    "PACTIME AFTER 2",
+                    "CPACTIME ON",
+                    "STREAMEV OFF",
+                    "STREAMSW $00",
+                ]
+            case TAPR_Variant.KPC3:
+                return [
+                    "INTFACE TERMINAL",
+                    "CD SOFTWARE",
+                    "NEWMODE ON",
+                    "8BITCONV ON",
+                    "BEACON EVERY 0",
+                    "SLOTTIME 10",
+                    "PERSIST 63",
+                    "PACLEN 128",
+                    "MAXFRAME 2",
+                    "FRACK 6",
+                    "RETRY 8",
+                    "CHECK 30",
+                    "TXDELAY 40",
+                    "XFLOW OFF",
+                    "SENDPAC $05",
+                    "CR OFF",
+                    "PACTIME AFTER 2",
+                    "CPACTIME ON",
+                    "STREAMEV OFF",
+                    "STREAMSW $00",
+                ]
+            case TAPR_Variant.OPENTNC:
+                return [
+                    "SLOTTIME 10",
+                    "PERSIST 63",
+                    "PACLEN 128",
+                    "MAXFRAME 2",
+                    "FRACK 6",
+                    "RETRY 8",
+                    "RESPTIME 5",
+                    "CHECK 30",
+                    "TXDELAY 40",
+                    "SENDPAC $05",
+                    "PACTIME AFTER 1",
+                    "CPACTIME ON",
+                    "MONITOR OFF",
+                ]
+        return []
 
     @staticmethod
-    def get_default_after_init_commands():
-        return [
-            "SENDPAC $0D",
-            "CR ON",
-            "PACTIME AFTER 10",
-            "CPACTIME OFF",
-            "STREAMSW $7C"
-        ]
-"""
-class KISS_Device(TncDevice):
-    def __init__(self,pipeline:Pipeline,pd):
-        super().__init__(pipeline,pd)
-        self.mycall = ""
-        self.bytes_already_searched = 0
-        self.bbs = None
-        self.bbs_parser = None
+    def get_default_after_init_commands(s:str):
+        match TAPR_Device.find_variant(s):
+            case TAPR_Variant.KPC3PLUS:
+                return [
+                    "SENDPAC $0D",
+                    "CR ON",
+                    "PACTIME AFTER 10",
+                    "CPACTIME OFF",
+                    "STREAMSW $7C"
+                ]
+            case TAPR_Variant.KPC3:
+                return [
+                    "SENDPAC $0D",
+                    "CR ON",
+                    "PACTIME AFTER 10",
+                    "CPACTIME OFF",
+                    "STREAMSW $7C"
+                ]
+            case TAPR_Variant.OPENTNC:
+                return [
+                    "SENDPAC $0D",
+                    "PACTIME AFTER 10",
+                    "CPACTIME OFF",
+                ]
+        return []
+    
 
-    def start_session(self,mailbox,srflags:int,sendimmediate:list[int]=None):
-        super().start_session(l1,lp,mailbox,srflags,sendimmediate)
-        self.mycall = self.pd.getActiveCallSign().upper()
-        self.bbs = self.pd.getBBS("ConnectName").upper()
-        self.signal_frame_read_handle = self.io_device.signal_frame_read.connect(self.ax25_controller.on_frame)   
-        #mycall = f"{self.get_command("CommandMyCall")} {self.pd.getActiveCallSign()}\r"
-        self.ax25_controller.dl_connect_request()
-
-    def stop_session(self):
-        ### send IDENT if operating in z mode
-        super().stop_session()
-        if self.signal_frame_read_handle:
-            self.io_device.signal_frame_read.disconnect(self.signal_frame_read_handle)
-        self.signal_frame_read_handle = None
-        self.connect = None
-        self.monitor_mode = False
-        global_signals.signal_status_bar_message.emit("")
-        self.signalDisconnected.emit()
-
-    def onConnected(self):
-        print("Connected!")
-        # give control over to BBS parser
-        self.bbs_parser = Jnos2Parser(self.pd,False,self)
-        #self.bbs_parser.signalDisconnected.connect(self.onDisconnected)
-        self.bbs_parser.start_session(self,self.mailbox,self.srflags,self.sendimmediate)
-
-    def onDisconnected(self):
-        # if we never actually connected, there will not be a bbs_parser
-        if not self.bbs_parser:
-            return # this happens at startup sometimes - the TNC was holding on to it from a previous session
-        print("TNC got disconnected!")
-        global_signals.signal_status_bar_message.emit("Resetting TNC")
-        #self.bbs_parser.signalDisconnected.disconnect()
-        self.bbs_parser = None
-
-    def on_bytes_ready(self):
-        done = False
-        while not done:
-            assert(self.line_end)
-            start = max(self.bytes_already_searched-len(self.line_end)+1,0)
-            if (p := self._sdata.find(self.line_end,start)) >= 0:
-                if self.include_line_end_in_reply:
-                    global_signals.signal_line_read.emit(self._sdata[0:p+len(self.line_end)].decode())
-                else:
-                    global_signals.signal_line_read.emit(self._sdata[0:p].decode())
-                # extract
-                del self._sdata[0:p+len(self.line_end)]
-                self.bytes_already_searched = 0
-            else:
-                self.bytes_already_searched = len(self._sdata)
-                done = True
-
-    def send(self,s:str): # these are ordinary strings, get sent as "I" frames
-        self.ax25_controller.dl_data_request(s)
-
-    def send_ui(self,s:str): # these are ordinary strings, get sent as "UI" frames
-        self.ax25_controller.dl_unit_data_request(s)
-
-"""

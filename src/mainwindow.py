@@ -459,7 +459,11 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             QMessageBox.critical(self,"Error",f"Error \"{e}\" opening interface")
             return
         if mode:
-            kisson = bytes(self.settings.getInterface("CommandKiss","INTFACE KISS")+"\r","utf-8")
+            k = self.settings.getInterface("CommandKiss","echo;RESET")
+            k.replace(';','\r')
+            if not k.endswith('\r'):
+                k += '\r'
+            kisson = bytes(k,"utf-8")
             self.io_device.write(kisson)
             self.io_device.write(b"RESET\r")
             QTimer.singleShot(4000,self._tmp1)
@@ -1033,27 +1037,31 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
             for dc in Jnos2Parser.get_default_commands().items():
                 self.settings.setBBS(dc[0],dc[1])
         self.settings.setActiveBBS(self.settings.getBBSs()[0])
+        interfaces = [
+            ("Kantronics_KPC3-Plus","KPC3+ TNC for use with Santa Clara County's BBS System. Verify the COM port setting for your system."),
+            ("OpenTNC","Verify the COM port setting for your system."),
+            ("Generic KISS Device","Verify the COM port setting for your system. Network interfacing is not yet supported.")
+            ]
+        for interface,desc in interfaces:
+            self.settings.addInterface(interface,desc)
+            self.settings.setActiveInterface(interface)
+            for p in TAPR_Device.get_default_prompts(interface):
+                self.settings.setInterface(p[0],p[1])
+            self.settings.setInterface("AlwaysSendInitCommands",True)
+            self.settings.setInterface("IncludeCommandPrefix",False)
+            for dc in TAPR_Device.get_default_commands(interface).items():
+                self.settings.setInterface(dc[0],dc[1])
+            self.settings.setInterface("CommandPrefix","")
+            self.settings.setInterface("CommandsBefore",TAPR_Device.get_default_before_init_commands(interface))
+            self.settings.setInterface("CommandsAfter",TAPR_Device.get_default_after_init_commands(interface))
+            self.settings.setInterface("Baud","9600")
+            self.settings.setInterface("Parity","None")
+            self.settings.setInterface("DataBits","8")
+            self.settings.setInterface("StopBits","1")
+            self.settings.setInterface("FlowControl","RTS/DTS")
 
-        self.settings.addInterface("XSC_Kantronics_KPC3-Plus","KPC3+ TNC for use with Santa Clara County's BBS System. Verify the COM port setting for your system.")
-        self.settings.addInterface("Generic KISS Device","Verify the COM port setting for your system. Network interfacing is not yet supported.")
-        self.settings.setActiveInterface(self.settings.getInterfaces()[0])
-        for p in TAPR_Device.get_default_prompts():
-            self.settings.setInterface(p[0],p[1])
-        self.settings.setInterface("AlwaysSendInitCommands",True)
-        self.settings.setInterface("IncludeCommandPrefix",False)
-        for dc in TAPR_Device.get_default_commands().items():
-            self.settings.setInterface(dc[0],dc[1])
-        self.settings.setInterface("CommandPrefix","")
-        self.settings.setInterface("CommandsBefore",TAPR_Device.get_default_before_init_commands())
-        self.settings.setInterface("CommandsAfter",TAPR_Device.get_default_after_init_commands())
-        self.settings.setInterface("Baud","9600")
-        self.settings.setInterface("Parity","None")
-        self.settings.setInterface("DataBits","8")
-        self.settings.setInterface("StopBits","1")
-        self.settings.setInterface("FlowControl","RTS/DTS")
-        # self.settings.addInterface("XSC_Kantronics_KPC3","KPC3 (NOT the 3+ version) TNC for use with Santa Clara County's BBS System. Verify the COM port setting for your system.")
-        # more interfaces go here
         self.settings.addUserCallSign(callsign,name,prefix)
+        self.settings.setActiveInterface(self.settings.getInterfaces()[0])
         # ?? is this needed? self.settings.setActiveProfile("Main") # the default profile
         self.settings.setActiveUserCallSign(self.settings.getUserCallSigns()[0])
 
