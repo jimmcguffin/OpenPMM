@@ -24,7 +24,7 @@ debug_sequence = False
 
 # there is a list of these in the parser
 # first, the "what_to_send" (if any) is sent over the serial port
-# then, when the response comes back, the handler is called with the reponse
+# then, when the response comes back, the handler is called with the response
 class BbsSequenceStep():
     def __init__(self,s,h=None,data=None):
         self.what_to_send = s # can be blank
@@ -119,6 +119,8 @@ class BbsParser(QObject):
 
     # call this when items have been add or removed or when bbs_pending has been changed
     def check_sequence(self):
+        if self.bbs_pending:
+            return
         if debug_sequence: self.dump_sequence("cs-before:")
         while self.bbs_sequence:
             step = self.bbs_sequence[0]
@@ -165,6 +167,7 @@ class Jnos2Parser(BbsParser):
         self.add_step(BbsSequenceSync())
         if self.srflags & 1: # send
             self.add_step(BbsSequenceSync(self.send_outgoing))
+            self.add_step(BbsSequenceSync())
         if self.srflags & 2: # recv
             self.add_step(BbsSequenceStep("la\r",self.handle_list)) # reads the "home" list, will insert new read and kill messages
             self.add_step(BbsSequenceSync(self.kill_read_messages))
@@ -254,12 +257,13 @@ class Jnos2Parser(BbsParser):
                     continue
                 # the first char might be a ">" which indicates the current message, we dont care about that, and then a space
                 words = l[2:].split(None,7) # the date will span multiple words
-                # word[0] is the message number
-                # word[1] is the to_addr
-                # word[2] is the from_adddr
-                # word[3] is the month
-                # word[4] is the day
-                # word[5] is the size
+                # word[0] is the "Y" or "N" if read/not-read
+                # word[1] is the message number
+                # word[2] is the to_addr
+                # word[3] is the from_adddr
+                # word[4] is the month
+                # word[5] is the day
+                # word[6] is the size
                 # everything after this is the subject
                 if len(words) >= 2 and words[0] in ("Y","N") and words[1].isdigit():
                     # todo: we might consider checking if we already have this message, but it might be hard when there is
@@ -276,47 +280,6 @@ class Jnos2Parser(BbsParser):
                     tmp = f"{self.get_command("CommandRead")} {mn}\r"
                     self.push_step(BbsSequenceStep(tmp,self.handle_read,mn))
                     self.push_step(BbsSequenceSync()) # wait until done
-
-        # if len(lines) >= 2:
-        #     #asume no echo
-        #     area_line = 0
-        #     message_counts_line = 1
-        #     first_message_line = 4
-        #     if self.using_echo:
-        #         area_line += 1
-        #         message_counts_line += 1
-        #         first_message_line += 1
-        #     words = lines[area_line].split()
-        #     if len(words) >= 2 and words[0] == "Area:":
-        #         self.current_area = words[1].upper()
-        #     elif len(words) >= 3 and words[0] == "Mail" and words[1] == "area:":
-        #         self.current_area = words[2].upper()
-        #     # line 2 is blank, 3 has the column headers
-        #     for l in lines[first_message_line:]:
-        #         # the first char might be a ">" which indicates the current message, we dont care about that, and then a space
-        #         words = l[2:].split(None,7) # the date will span multiple words
-        #         # word[0] is the message number
-        #         # word[1] is the to_addr
-        #         # word[2] is the from_adddr
-        #         # word[3] is the month
-        #         # word[4] is the day
-        #         # word[5] is the size
-        #         # everything after this is the subject
-        #         if len(words) >= 2 and words[0] in ("Y","N") and words[1].isdigit():
-        #             # todo: we might consider checking if we already have this message, but it might be hard when there is
-        #             # only a partial subject and weird date formats, so for now read (and later kill) all of them
-        #             # matching works ok for bulletins but not so good for the regular mail area
-        #             callsign = self.pd.getActiveCallSign(False).upper()
-        #             if self.current_area != callsign:
-        #                 if len(words) >= 8:
-        #                     maybematch = self.mailbox.is_possibly_a_duplicate(words[2],words[3],words[7].rstrip())
-        #                     print(f"matcher says {maybematch},{words[7].rstrip()}")
-        #                     if maybematch:
-        #                         continue
-        #             mn = int(words[1])
-        #             tmp = f"{self.get_command("CommandRead")} {mn}\r"
-        #             self.push_step(BbsSequenceStep(tmp,self.handle_read,mn))
-        #             self.push_step(BbsSequenceSync()) # wait until done
 
     def kill_read_messages(self,_=None):
         # only kill read messages on own area
@@ -376,11 +339,13 @@ class Jnos2Parser(BbsParser):
 
     def handle_read(self,r,data):
         print(f"got read {r.replace("\r","|")}")
-        firstchar = "r" if self.using_echo else "M"
-        in_home_area = self.current_area == self.home_area
-        if r.startswith(firstchar) and in_home_area:
-            self.messages_to_be_killed.append(data)
         lines = r.splitlines()
+        if self.using_echo:
+            lines = lines[1:] # skip echo
+        in_home_area = self.current_area == self.home_area
+        if lines and lines[0].startswith("Message ") and in_home_area:
+            self.messages_to_be_killed.append(data)
+
         if lines and lines[-1] == "": lines.pop()
         # discard up until last blank line
         while len(lines) >= 2 and lines[-1] != "": lines.pop()

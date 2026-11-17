@@ -233,7 +233,7 @@ class f309(FPDF):
         date0 = f309.reformat_date(tmp) # QDateTime.fromString(tmp,Qt.DateFormat.ISODate)
         tmp = self.pd.settings.value("309Settings/OperationalPeriodTo","2026/01/01T12:00:00")
         date1 = f309.reformat_date(tmp) # QDateTime.fromString(tmp,Qt.DateFormat.ISODate)
-
+        date_now = QDateTime.currentDateTime().toString("MM/dd/yyyy HH:mm")
 
         # first, all the lines
         # drawing the thinner gray lines first looks better
@@ -274,7 +274,7 @@ class f309(FPDF):
         self.set_font("Arial",style="B",size=14)  # Set font
         self.set_xy(self.vlines[0],self.hlines[0]+2)
         self.cell(self.vhlines[0]-self.vlines[0],14,txt="COMM Log",align='C')
-        # ten 10 point stuff
+        # then 10 point stuff
         self.set_font("Arial",style="B",size=10)
         self.set_xy(self.vlines[0],self.hlines[0]+18)
         self.cell(self.vhlines[0]-self.vlines[0],10,txt="ICS 309-SCCo",align='C')
@@ -288,8 +288,6 @@ class f309(FPDF):
         self.cell(self.vlines[3]-self.vlines[1],12,txt="FROM",align='C')
         self.set_xy(self.vlines[3],self.hlines[3]+2)
         self.cell(self.vlines[5]-self.vlines[3],12,txt="TO",align='C')
-        self.set_xy(self.vlines[6],self.hlines[6]+18)
-        self.cell(self.vlines[7]-self.vlines[6],10,txt=f"{page} of {npages}",align='C')
         # the header fields
         self.set_xy(self.vhlines[0]+2,self.hlines[0]+18)
         self.cell(self.vhlines[2]-self.vhlines[0],10,txt=self.incidentname,align='L')
@@ -302,6 +300,13 @@ class f309(FPDF):
         self.cell(self.vhlines[1]-self.vlines[0],10,txt=f"{self.position_tac_call}",align='L')
         self.set_xy(self.vhlines[1]+2,self.hlines[1]+18)
         self.cell(self.vlines[-1]-self.vhlines[2],10,txt=f"{self.opname_user_call}",align='L')
+        # the the footers
+        self.set_xy(self.vlines[0],self.hlines[6]+18)
+        self.cell(self.vlines[1]-self.vlines[0],10,txt=f"{self.opname_user_call}",align='L')
+        self.set_xy(self.vlines[5],self.hlines[6]+18)
+        self.cell(self.vlines[6]-self.vlines[5],10,txt=f"{date_now}",align='L')
+        self.set_xy(self.vlines[6],self.hlines[6]+18)
+        self.cell(self.vlines[7]-self.vlines[6],10,txt=f"{page} of {npages}",align='C')
 
         # then 8 point stuff
         self.set_font("Arial",style="B",size=8)

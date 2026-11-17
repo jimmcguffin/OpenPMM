@@ -9,7 +9,7 @@ from globalsignals import global_signals
 
 """
 This file is a partial implmentation of the ax.25 protocol version 2.0
-It does not support ant of the"busy" stuff
+It does not support any of the"busy" stuff
 """
 
 UNPROTO_PID = 0xf0
@@ -22,7 +22,7 @@ class AX25State(IntEnum):
     S5_INFORMATION_XFR = 5
     S6_REJ_FRAME_SENT = 6
     S7_AWAITING_ACK = 7
-    # no support for any "busy" stuff, states 8-15
+    # no support for any "busy" stuff, states 8-16
 
 class AX25Event(IntEnum):
     # these all have frames as the second tuple
@@ -53,8 +53,9 @@ class AX25_Controller(QObject):
     signal_bytes_ready = Signal(bytes) # data output to upper layer
     signal_write = Signal(ax25.Frame) # data output to lower layer
     signal_connected = Signal()
+    signal_remote_connected = Signal()
     signal_disconnected = Signal()
-    def __init__(self,pipeline):
+    def __init__(self,pipeline=None):
         super().__init__()
         self.pipeline = pipeline
         self.mycalls = ("","")
@@ -69,7 +70,7 @@ class AX25_Controller(QObject):
         self.srt = 0 # smoothed round trip time
         # some more variable names from the spec
         self.t1_v = 40000 # acknowledgement time
-        self.t2_v = 200 # response delay time, is milliseconds to wait for consecutive packets
+        self.t2_v = 200 # response delay time, in milliseconds to wait for consecutive packets
         self.t3_v = 10000 # inactive link time
         self.n1 = 128 # maximum bytes in a I packet, aka PACLEN
         self.n2 = 4 # maximum retries
@@ -97,12 +98,17 @@ class AX25_Controller(QObject):
 
     # hi-level functions
 
-    def start_session(self,mycalls:tuple[str,str],bbscall:str):
+    def start_outgoing_session(self,mycalls:tuple[str,str],bbscall:str):
         self.mycalls = mycalls
         self.bbscall = bbscall
         self.monitor_mode = False
         global_signals.signal_connected.connect(self.onConnected)        
         self.event(AX25Event.LOCAL_START)
+
+    def start_incoming_session(self,mycalls:tuple[str,str],bbscall:str):
+        self.mycalls = mycalls
+        self.bbscall = bbscall
+        self.monitor_mode = False
 
     def start_monitor_session(self):
         self.mycalls = ("","")
@@ -117,7 +123,17 @@ class AX25_Controller(QObject):
         self.event(AX25Event.LOCAL_STOP)
         global_signals.signal_status_bar_message.emit("")
 
+    """
+    Looking at the documentation for AX.25 v2.0, figures A1, A2, and A3 on pages 37-39, the states
+    are the rows of the table, and the events are the columns. At this time I am only supporing the
+    states up to S7, States S8 to S16 all involve busy states.
+
+    """
+
     def event(self,event) -> None: # event is sometimes just an int, but often tupled with an AX25 frame
+        """
+        Dispatches events according to the current state
+        """
         match (self.state):
             case AX25State.S1_DISCONNECTED:
                 self.state_s1_disconnected_event(event)
@@ -133,7 +149,9 @@ class AX25_Controller(QObject):
                 self.state_s6_rej_frame_sent_event(event)
             case AX25State.S7_AWAITING_ACK:
                 self.status_s7_awaiting_ack_event(event)
-
+    """
+    Following are 8 functions, one for each current state
+    """
     def state_s1_disconnected_event(self,event):
         if isinstance(event, tuple):
             evcode = event[0]
@@ -151,8 +169,12 @@ class AX25_Controller(QObject):
             case AX25Event.SABM_CMD:
                 self.create_and_send_frame(ax25.FrameType.UA,False,pf)
                 self.state = AX25State.S5_INFORMATION_XFR
+                self.signal_remote_connected.emit() # not typical
             case AX25Event.DISC_CMD:
-                self.create_and_send_frame(ax25.FrameType.DM,False,pf)
+                if not pf:
+                    self.create_and_send_frame(ax25.FrameType.UA,False,pf)
+                else:
+                    self.create_and_send_frame(ax25.FrameType.DM,False,pf)
             case AX25Event.LOCAL_START:
                 self.establish_data_link()
                 self.state = AX25State.S2_LINK_SETUP
@@ -175,6 +197,7 @@ class AX25_Controller(QObject):
                 self.create_and_send_frame(ax25.FrameType.DM,False,pf)
                 self.state = AX25State.S1_DISCONNECTED
             case AX25Event.UA_RESP:
+                self.t1.stop()
                 self.signal_connected.emit()
                 self.state = AX25State.S5_INFORMATION_XFR
             case AX25Event.DM_RESP:
@@ -189,7 +212,7 @@ class AX25_Controller(QObject):
                 self.create_and_send_frame(ax25.FrameType.SABM,True,True)
                 self.t3.stop()
                 self.t1.start(self.t1_v)
-                print(f"Timer 1 set at {datetime.now().strftime("%H:%M:%S.%f")}")
+                print(f"Timer 1-1 set at {datetime.now().strftime("%H:%M:%S.%f")}")
                 self.state = AX25State.S2_LINK_SETUP
             case AX25Event.T2_EXP:
                 pass
@@ -215,7 +238,7 @@ class AX25_Controller(QObject):
                 self.state = AX25State.S5_INFORMATION_XFR
             case AX25Event.DISC_CMD:
                 self.create_and_send_frame(ax25.FrameType.UA,False,pf)
-                self.state = AX25State.S1_DISCONNECTED
+                self.reset()
             case AX25Event.FRMR_RESP:
                 self.establish_data_link()
                 self.state = AX25State.S2_LINK_SETUP
@@ -253,7 +276,7 @@ class AX25_Controller(QObject):
                 self.state = AX25State.S1_DISCONNECTED
             case AX25Event.DISC_CMD:
                 self.create_and_send_frame(ax25.FrameType.UA,False,pf)
-                self.state = AX25State.S1_DISCONNECTED
+                self.reset()
             case AX25Event.UA_RESP:
                 self.state = AX25State.S1_DISCONNECTED
             case AX25Event.DM_RESP:
@@ -276,25 +299,36 @@ class AX25_Controller(QObject):
             frame = None
             pf = False
 
-        # RNR should be handled differently but not supporting busy mode noe
+        # RNR should be handled differently but not supporting busy mode now
         match (evcode):
             case AX25Event.I_CMD | AX25Event.RR_CMD | AX25Event.REJ_CMD | AX25Event.RNR_CMD:
-                if (pf):
-                    self.create_and_send_frame(ax25.FrameType.RR,False,pf)
+                assert(frame)
+                if self.ns == self.vr: # this was the expected value
+                    self.vr = (self.vr + 1)  % self.modulo
+                    self.signal_bytes_ready.emit(frame.data)
+                    if (pf): # I have only seen this a few times
+                        self.t2.stop()
+                        self.create_and_send_frame(ax25.FrameType.RR,False,pf) # send an immediate response
+                    else:
+                        print(f"Timer 2 set at {datetime.now().strftime("%H:%M:%S.%f")}") # otherwise wait 200ms
+                        self.t2.start()
+                else: # this was not the expected value
+                    print(f"Was expecting seq {self.vr} but got {self.ns}")
                 #if not self.send_i_frames():
                 #    self.create_and_send_frame(ax25.FrameType.RR,False,False)
             case AX25Event.SABM_CMD:
                 self.create_and_send_frame(ax25.FrameType.UA,False,pf)
                 self.state = AX25State.S5_INFORMATION_XFR
             case AX25Event.DISC_CMD:
-                self.signal_disconnected.emit()
                 self.create_and_send_frame(ax25.FrameType.UA,False,pf)
-                self.state = AX25State.S1_DISCONNECTED
+                self.reset()
             case AX25Event.RR_RESP | AX25Event.REJ_RESP | AX25Event.RNR_RESP:
                 self.send_i_frames()
             case AX25Event.DM_RESP:
-                self.establish_data_link()
-                self.state = AX25State.S2_LINK_SETUP
+                # these don't look right
+                # #self.establish_data_link()
+                #self.state = AX25State.S2_LINK_SETUP
+                self.reset()
             case AX25Event.FRMR_RESP:
                 self.establish_data_link()
                 self.state = AX25State.S2_LINK_SETUP
@@ -350,17 +384,17 @@ class AX25_Controller(QObject):
                 self.create_and_send_frame(ax25.FrameType.UA,False,pf)
                 self.state = AX25State.S5_INFORMATION_XFR
             case AX25Event.DISC_CMD:
-                self.signal_disconnected.emit()
                 self.create_and_send_frame(ax25.FrameType.UA,False,pf)
-                self.state = AX25State.S1_DISCONNECTED
+                self.reset()
             case AX25Event.RR_RESP | AX25Event.REJ_RESP | AX25Event.RNR_RESP:
                 self.send_i_frames()
             case AX25Event.UA_RESP:
                 self.establish_data_link()
                 self.state = AX25State.S2_LINK_SETUP
             case AX25Event.DM_RESP:
-                self.establish_data_link()
-                self.state = AX25State.S2_LINK_SETUP
+                #self.establish_data_link()
+                #self.state = AX25State.S2_LINK_SETUP
+                self.reset()
             case AX25Event.FRMR_RESP:
                 self.establish_data_link()
                 self.state = AX25State.S2_LINK_SETUP
@@ -403,7 +437,13 @@ class AX25_Controller(QObject):
                 else:
                     self.send_i_frames()
             case AX25Event.RR_CMD:
-                pass
+                if (pf):
+                    # this is the mode common path, the other end is responding to our query
+                    self.vs = self.nr
+                    pass
+                else:
+                    # this is a regular async ACK, so do nothing special
+                    pass
             case AX25Event.REJ_CMD:
                 pass
             case AX25Event.RNR_CMD:
@@ -414,7 +454,7 @@ class AX25_Controller(QObject):
             case AX25Event.DISC_CMD:
                 self.signal_disconnected.emit()
                 self.create_and_send_frame(ax25.FrameType.UA,False,pf)
-                self.state = AX25State.S1_DISCONNECTED
+                self.reset()
             case AX25Event.RR_RESP | AX25Event.REJ_RESP | AX25Event.RNR_RESP:
                 if (pf):
                     self.state = AX25State.S5_INFORMATION_XFR
@@ -425,8 +465,9 @@ class AX25_Controller(QObject):
                 self.establish_data_link()
                 self.state = AX25State.S2_LINK_SETUP
             case AX25Event.DM_RESP:
-                self.establish_data_link()
-                self.state = AX25State.S2_LINK_SETUP
+                #self.establish_data_link()
+                #self.state = AX25State.S2_LINK_SETUP
+                self.reset()
             case AX25Event.FRMR_RESP:
                 self.establish_data_link()
                 self.state = AX25State.S2_LINK_SETUP
@@ -449,7 +490,17 @@ class AX25_Controller(QObject):
             case AX25Event.INVALID_NR | AX25Event.BOGUS_FRAME:
                 self.create_and_send_frame(ax25.FrameType.FRMR,False,False)
                 self.state = AX25State.S3_FRAME_REJECT
-    
+
+    def reset(self):
+        self.t1.stop()
+        self.t2.stop()
+        self.t3.stop()
+        self.i_frame_queue.clear()
+        for i in range(len(self.stuff_waiting_to_be_acknowleged)):
+            self.stuff_waiting_to_be_acknowleged[i] = None
+        self.signal_disconnected.emit()
+        self.state = AX25State.S1_DISCONNECTED
+
 	# the next group of functions are called by the upper layer (slots using Qt terminology)
     def dl_connect_request(self):
         self.srt = 40000 # initial guess for t1 # very large for debugging
@@ -492,7 +543,7 @@ class AX25_Controller(QObject):
             if self.t1.remainingTime() < 0:
                 self.t3.stop()
                 self.t1.start(self.t1_v)
-                print(f"Timer 1 set at {datetime.now().strftime("%H:%M:%S.%f")}")
+                print(f"Timer 1-2 set at {datetime.now().strftime("%H:%M:%S.%f")}")
         return sent
 
 
@@ -521,9 +572,6 @@ class AX25_Controller(QObject):
 
         if ft.is_I():
             self.ns = control.send_seqno
-            self.incoming_i_frame(frame)
-            print(f"Timer 2 set at {datetime.now().strftime("%H:%M:%S.%f")}")
-            self.t2.start()
         if not frame.control.frame_type.is_U():
             self.nr = control.recv_seqno
             self.acknowledge_up_to(self.nr)
@@ -558,6 +606,10 @@ class AX25_Controller(QObject):
         if self.state.value >= AX25State.S5_INFORMATION_XFR:
             self.send_i_frames()
 
+    """
+    Some of the names of these subroutines come from
+    the AX.25 v2.2 specs
+    """
 
     def acknowledge_up_to(self,m):
         while self.va != m:
@@ -565,18 +617,14 @@ class AX25_Controller(QObject):
             self.va = (self.va + 1) % self.modulo
         self.check_i_frame_ackd(m)
 
-    def incoming_i_frame(self,frame):
-        if self.ns == self.vr:
-            self.vr = (self.vr + 1)  % self.modulo
-            self.signal_bytes_ready.emit(frame.data)
-
     def establish_data_link(self):
         #self.clear_exception_conditions()
         self.rc = 0
         self.create_and_send_frame(ax25.FrameType.SABM,True,True)
         self.t3.stop()
-        self.t1.start(self.t1_v)
-        print(f"Timer 1 set at {datetime.now().strftime("%H:%M:%S.%f")}")
+        # the timer gets started in create_and_send_frame
+        #self.t1.start(self.t1_v)
+        #print(f"Timer 1-3 set at {datetime.now().strftime("%H:%M:%S.%f")}")
 
     def check_i_frame_ackd(self,m):
         if m == self.vs:
@@ -666,6 +714,7 @@ class AX25_Controller(QObject):
         if ft.is_I():
             control.send_seqno = self.vs
             self.vs = (self.vs + 1) % self.modulo
+            self.stuff_waiting_to_be_acknowleged[control.send_seqno] = (cr,pf,s)
         if ft.is_I() or ft.is_S():
             self.nr = self.vr
             control.recv_seqno = self.nr
@@ -682,7 +731,6 @@ class AX25_Controller(QObject):
         msg = bytes(1)+frame.pack() # bytes(1) means one byte with a value of 0
         self.send_frame(ft,msg)
 
-
     def create_and_send_ident_frame(self,s:str):
         dst = ax25.Address("IDENT")
         dst.command_response = False
@@ -694,23 +742,37 @@ class AX25_Controller(QObject):
         msg = bytes(1)+frame.pack() # bytes(1) means one byte with a value of 0
         self.send_frame(ax25.FrameType.UI,msg)
 
-
     def send_frame(self,ft:ax25.FrameType,msg:bytes): # msg is a full ax25 frame including the 0 at the start
         self.signal_write.emit(msg)
-        if ft.is_I():
+        if ft in (ax25.FrameType.I,ax25.FrameType.SABM,ax25.FrameType.DISC): # ?? other types too?
             self.t1.start(self.t1_v)
-            print(f"Timer 1 set at {datetime.now().strftime("%H:%M:%S.%f")}")
-            print(f"pushing {self.ns} {len(msg)} {msg})")
-            self.stuff_waiting_to_be_acknowleged[self.ns] = (ft,msg)
-        elif ft == ax25.FrameType.SABM:
-            self.t1.start(self.t1_v)
-            print(f"Timer 1 set at {datetime.now().strftime("%H:%M:%S.%f")}")
+            print(f"Timer 1-4 set at {datetime.now().strftime("%H:%M:%S.%f")}")
 
-    def resend_frame(self,ft:ax25.FrameType,msg:bytes): # same as previous but does not push into stuff_waiting_to_be_acknowleged
-        self.signal_write.emit(msg)
-        if ft.is_I():
-            self.t1.start(self.t1_v)
-            print(f"Timer 1 set at {datetime.now().strftime("%H:%M:%S.%f")}")
-        elif ft == ax25.FrameType.SABM:
-            self.t1.start(self.t1_v)
-            print(f"Timer 1 set at {datetime.now().strftime("%H:%M:%S.%f")}")
+    # def resend_frame(self,ft:ax25.FrameType,msg:bytes): # same as previous but does not push into stuff_waiting_to_be_acknowleged
+    #     self.signal_write.emit(msg)
+    #     if ft.is_I():
+    #         self.t1.start(self.t1_v)
+    #         print(f"Timer 1-6 set at {datetime.now().strftime("%H:%M:%S.%f")}")
+    #     elif ft == ax25.FrameType.SABM:
+    #         self.t1.start(self.t1_v)
+    #         print(f"Timer 1-7 set at {datetime.now().strftime("%H:%M:%S.%f")}")
+
+    def resend_frame(self,index:int):
+        if self.stuff_waiting_to_be_acknowleged[index]:
+            ft = ax25.FrameType.I
+            cr = self.stuff_waiting_to_be_acknowleged[index][0]
+            pf = self.stuff_waiting_to_be_acknowleged[index][1]
+            s = self.stuff_waiting_to_be_acknowleged[index][2]
+
+            dst = ax25.Address(self.bbscall)
+            dst.command_response = cr
+            src = ax25.Address(self.mycalls[0])
+            src.command_response = not cr
+            control = ax25.Control(ft)
+            control.poll_final = pf
+            control.send_seqno = index
+            self.nr = self.vr
+            control.recv_seqno = self.nr
+            frame = ax25.Frame(dst,src,control=control,pid=UNPROTO_PID,data=s.encode())
+            msg = bytes(1)+frame.pack() # bytes(1) means one byte with a value of 0
+            self.send_frame(ft,msg)

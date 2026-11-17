@@ -10,6 +10,8 @@ from PySide6.QtCore import QObject, Signal, QIODevice
 from PySide6.QtNetwork import QUdpSocket
 from PySide6.QtSerialPort import QSerialPort
 
+MAKE_SPECIAL_DEBUG_LOGS = False
+
 class Level1(QObject):
     signal_bytes_ready = Signal(bytes) # one or more bytes ready to read from io device
     def __init__(self,io_device:QIODevice,logfile_name:str=None):
@@ -169,12 +171,25 @@ class KissParser(QObject):
     def __init__(self):
         super().__init__()
         self._sdata = bytearray()
+        if MAKE_SPECIAL_DEBUG_LOGS:
+            self._kisslog = []
+            self._kisslog.append(open("kboth.txt","wt"))
+            self._kisslog.append(open("kw.txt","wt"))
+            self._kisslog.append(open("kr.txt","wt"))
 
     def on_write(self,b): # b is a complete KISS packet starting with the command byte which is generally 0
         # for c in b:
         #     print(f"{c:02x} ",end="")
         # print("")
-        self.debug_display(b)
+        if tmp := self.make_debug_string(b):
+            if MAKE_SPECIAL_DEBUG_LOGS:
+                tmp += "\r\n"
+                if self._kisslog[0]:
+                    self._kisslog[0] .write(tmp)
+                if self._kisslog[1]:
+                    self._kisslog[1] .write(tmp)
+            else:
+                print(tmp)
         tmp = KissParser.kiss_encode_plus(b)
         self.signal_write.emit(tmp)
         if False:
@@ -197,15 +212,23 @@ class KissParser(QObject):
             if i1-i0 > 2:
                 # skip first byte which seems to always be 0
                 msg = KissParser.kiss_decode(self._sdata[i0+2:i1])
-                self.debug_display(msg)
+                if tmp := self.make_debug_string(msg):
+                    if MAKE_SPECIAL_DEBUG_LOGS:
+                        tmp += "\r\n"
+                        if self._kisslog[0]:
+                            self._kisslog[0] .write(tmp)
+                        if self._kisslog[2]:
+                            self._kisslog[2] .write(tmp)
+                    else:
+                        print(tmp)
                 self.signal_bytes_ready.emit(msg)
                 global_signals.signal_monitor_msg_ax25.emit(msg) #! maybe pipeline will handle this
             self._sdata = self._sdata[i1:] # leave the last FEND in the buffer
         pass
     
     @staticmethod
-    def debug_display(b:bytes):
-        # if the first byte is a zero, (data packet for KISS), skip it
+    def make_debug_string(b:bytes) -> str:
+        # if the first byte is a zero, (data packet for KISS), skip over it
         if not b[0]:
             b = b[1:]
         # global_signals.signal_monitor_msg_ax25.emit(msg)
@@ -215,8 +238,8 @@ class KissParser(QObject):
             print("Error reading header")
             for c in b: 
                 print(f"{c:02x}",end=" ")
-            print("\n")
-            return
+            #print("\n")
+            return ""
         now = datetime.now()
         line = f"[{now.strftime("%H:%M:%S.%f")}] {frame.src.call}"
         if frame.src.ssid: line += f"-{frame.src.ssid}"
@@ -257,7 +280,7 @@ class KissParser(QObject):
             line += f", pid={frame.pid:02X}, len={len(frame.data)}) {frame.data}"
         else:
             line += ")"
-        print(line)
+        return line
 
     @staticmethod
     def kiss_encode_plus(s:bytes) -> bytes: # "plus" because it adds the start/end markers

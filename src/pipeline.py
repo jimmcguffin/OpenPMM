@@ -10,7 +10,7 @@ from tncparser import TAPR_Device
 # io_device object reads bytes, sends one or more bytes to line_parser, which then sends entire messages to TAPR (a TNC device, which sometimes internally passes then to BBS)
 
 # for KISS:
-# io_device object reads bytes, sends one or more bytes to KISS pasrser, whcih sends packets to KISS object (a TNC device), which then sends entire packets to AX25, which sends completed I-frame messages to the line_parser, then to BBS
+# io_device object reads bytes, sends one or more bytes to KISS pasrser, which sends packets to KISS object (a TNC device), which then sends entire packets to AX25, which sends completed I-frame messages to the line_parser, then to BBS
 
 # in the following "left" and "right" refer to the above sequences, so "left" means "towards the io_device"
 
@@ -23,6 +23,7 @@ class Pipeline(QObject):
     def __init__(self,pd,l1:Level1):
         self.pd = pd
         self.l1 = l1 # level1 device, usually a serial port or a UDP connection
+        self.using_echo = False
         self.mycalls = ("","")
         self.bbscall = ""
         # next 3 items are copied adn later passed to BBS
@@ -53,6 +54,7 @@ class Pipeline(QObject):
 class TAPR_Pipeline(Pipeline):
     def __init__(self,pd,l1:Level1):
         super().__init__(pd,l1)
+        self.using_echo = True
         self.line_parser = LineParser("TAPR")
         self.tnc_parser = TAPR_Device(self,self.pd)
         
@@ -66,7 +68,7 @@ class TAPR_Pipeline(Pipeline):
 
     def add_bbs(self,bbs_id:str):
         if bbs_id.startswith("[JNOS-2.0"):
-            self.bbs = Jnos2Parser(self.pd,False)
+            self.bbs = Jnos2Parser(self.pd,self.using_echo)
         if not self.bbs:
             return
         if not self.tnc_parser:
@@ -83,7 +85,8 @@ class TAPR_Pipeline(Pipeline):
         self.bbs = None # does this disconnect all of the signals?
     
     def set_line_end(self,le:bytes,include_line_end_in_reply:True):
-        self.line_parser.set_line_end(le,include_line_end_in_reply)
+        if self.line_parser:
+            self.line_parser.set_line_end(le,include_line_end_in_reply)
 
     def stop_session(self):
         self.remove_bbs()
@@ -98,6 +101,7 @@ class TAPR_Pipeline(Pipeline):
 class KISS_Pipeline(Pipeline):
     def __init__(self,pd,l1:Level1):
         super().__init__(pd,l1)
+        self.using_echo = False
         self.kiss_parser = KissParser() # these two items are tightly coupled, maybe combine
         self.ax25_controller = AX25_Controller(self)
         self.line_parser = LineParser("KISS")
@@ -111,7 +115,7 @@ class KISS_Pipeline(Pipeline):
 
     def start_session(self,mycalls:tuple[str,str],bbscall:str,mailbox,srflags:int,sendimmediate:list[int]=None):
         super().start_session(mycalls,bbscall,mailbox,srflags,sendimmediate)
-        self.ax25_controller.start_session(self.mycalls,self.bbscall)
+        self.ax25_controller.start_outgoing_session(self.mycalls,self.bbscall)
 
     def start_monitor_session(self):
         self.ax25_controller.start_monitor_session()

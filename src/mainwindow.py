@@ -93,7 +93,10 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
                 return
 
         self.settings.start()
-        self.settings.setActiveProfile("Main")
+        tmp = self.settings.getActiveProfile()
+        if not tmp:
+            tmp = "Main"
+        self.settings.setActiveProfile(tmp)
         if self.settings.getProfileBool("ShowStationIdAtStartup") or not self.settings.getActiveUserCallSign() or firsttime:
             #self.OnStationId()
             stationiddialog.StationIdDialog(self.settings,None).exec()

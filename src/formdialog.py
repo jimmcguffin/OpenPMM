@@ -785,17 +785,17 @@ class FormDialog(QMainWindow,Ui_FormDialogClass):
         if self.form == "CheckIn.desc" or self.form == "CheckOut.desc":
             handling = "R"
             if self.form == "CheckIn.desc":
-                line1 = "Check-In  "
+                line1 = "Check-In "
             else:
                 line1 = "Check-Out "
             line2 = ""
             usetactical = True if self.get_value_by_id("TacticalCall") else False
             if usetactical:
-                line1 += self.get_value_by_id("TacticalCall") + ",  " + self.get_value_by_id("TacticalName")
-                line2 = self.get_value_by_id("UserCall") + " , " + self.get_value_by_id("UserName")
+                line1 += self.get_value_by_id("TacticalCall") + ", " + self.get_value_by_id("TacticalName")
+                line2 = self.get_value_by_id("UserCall") + ", " + self.get_value_by_id("UserName")
                 message = line1 + "\n" + line2 + "\n"
             else:
-                line1 += self.get_value_by_id("UserCall") + " , " + self.get_value_by_id("UserName")
+                line1 += self.get_value_by_id("UserCall") + ", " + self.get_value_by_id("UserName")
                 message = line1 + "\n"
 
             subject = self.get_value_by_id("MsgNo") + "_" + handling[0] + "_" + line1

@@ -65,12 +65,17 @@ class AX25_Controller(QObject):
         ax25.Frame.is_command = is_command
 
 
-    def start_session(self,mycalls:tuple[str,str],bbscall:str):
+    def start_outgoing_session(self,mycalls:tuple[str,str],bbscall:str):
         self.mycalls = mycalls
         self.bbscall = bbscall
         self.monitor_mode = False
         global_signals.signal_connected.connect(self.onConnected)        
         self.dl_connect_request()
+
+    def start_incoming_session(self,mycalls:tuple[str,str],bbscall:str):
+        self.mycalls = mycalls
+        self.bbscall = bbscall
+        self.monitor_mode = False
 
     def start_monitor_session(self):
         self.mycalls = ("","")
