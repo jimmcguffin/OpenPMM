@@ -303,6 +303,9 @@ class Ui_MainWindowClass(object):
         self.cSearch = QPushButton(self.centralwidget)
         self.cSearch.setObjectName(u"cSearch")
         self.cSearch.setGeometry(QRect(520, 10, 90, 30))
+        self.c_add_voice_log = QPushButton(self.centralwidget)
+        self.c_add_voice_log.setObjectName(u"c_add_voice_log")
+        self.c_add_voice_log.setGeometry(QRect(1055, 40, 195, 24))
         MainWindowClass.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindowClass)
         self.menubar.setObjectName(u"menubar")
@@ -546,9 +549,10 @@ class Ui_MainWindowClass(object):
         ___qtablewidgetitem7.setText(QCoreApplication.translate("MainWindowClass", u"Date/Time", None));
         ___qtablewidgetitem8 = self.cMailList.horizontalHeaderItem(8)
         ___qtablewidgetitem8.setText(QCoreApplication.translate("MainWindowClass", u"Size", None));
-        self.cSendOnly.setText(QCoreApplication.translate("MainWindowClass", u"SendOnly", None))
+        self.cSendOnly.setText(QCoreApplication.translate("MainWindowClass", u"Send Only", None))
         self.cReceiveOnly.setText(QCoreApplication.translate("MainWindowClass", u"Receive Only", None))
         self.cSearch.setText(QCoreApplication.translate("MainWindowClass", u"Search", None))
+        self.c_add_voice_log.setText(QCoreApplication.translate("MainWindowClass", u"Add Voice Log (exp)", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindowClass", u"File", None))
         self.menuMove_to_Folder.setTitle(QCoreApplication.translate("MainWindowClass", u"Move to Folder", None))
         self.menuCopy_to_Folder.setTitle(QCoreApplication.translate("MainWindowClass", u"Copy to Folder", None))

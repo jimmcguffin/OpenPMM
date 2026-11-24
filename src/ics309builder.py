@@ -24,7 +24,7 @@ class Ics309Builder(QMainWindow,Ui_Ics309Builder):
         tmp = self.pd.settings.value("309Settings/OperationalPeriodFrom","2026-01-01T12:00:00")
         dt = QDateTime.fromString(tmp,Qt.DateFormat.ISODate)
         self.c_operational_period_from.setDateTime(dt)
-        tmp = self.pd.settings.value("309Settings/OperationalPeriodTo","02026-01-01T12:00:00")
+        tmp = self.pd.settings.value("309Settings/OperationalPeriodTo","2026-01-01T12:00:00")
         dt = QDateTime.fromString(tmp,Qt.DateFormat.ISODate)
         self.c_operational_period_to.setDateTime(dt)
         self.c_tactical_info.setText(self.pd.settings.value("309Settings/TacticalInfo",f"{self.pd.getTacticalCallSign("Name")} / {self.pd.getActiveTacticalCallSign()}"))
@@ -47,6 +47,7 @@ class Ics309Builder(QMainWindow,Ui_Ics309Builder):
         
         self.c_build_data_set.clicked.connect(self.on_build_data_set)
         self.c_print.clicked.connect(self.on_print)
+        self.c_print_voice.clicked.connect(self.on_print_blankvoice)
         self.actionExit.triggered.connect(self.on_exit)
         self.actionExit.triggered.connect(self.on_exit)
         self.c_exit.clicked.connect(self.on_exit)
@@ -94,7 +95,7 @@ class Ics309Builder(QMainWindow,Ui_Ics309Builder):
         self.pd.settings.setValue("309Settings/CustomRangeFrom",self.c_page1_custom_range_from.dateTime().toString(Qt.DateFormat.ISODate))
         self.pd.settings.setValue("309Settings/CustomRangeTo",self.c_page1_custom_range_to.dateTime().toString(Qt.DateFormat.ISODate))
 
-    def on_build_data_set(self):
+    def on_build_data_set(self,voice=False):
         self.save()
         # compute the time range
         range = self.pd.settings.value("309Settings/Range",0)
@@ -113,8 +114,11 @@ class Ics309Builder(QMainWindow,Ui_Ics309Builder):
             dt0 = QDateTime.fromString(self.pd.settings.value("309Settings/CustomRangeFrom",""),Qt.DateFormat.ISODate)
             dt1 = QDateTime.fromString(self.pd.settings.value("309Settings/CustomRangeTo",""),Qt.DateFormat.ISODate)
         self.data.clear()
+        log = "activity.log"
+        if voice:
+            log = "voice_activity.log"
         try:
-            with open("activity.log","rt",encoding="windows-1252") as file:
+            with open(log,"rt",encoding="windows-1252") as file:
                 for line in file.readlines():
                     line = line.rstrip()
                     f = line.split(",",7)
@@ -126,14 +130,26 @@ class Ics309Builder(QMainWindow,Ui_Ics309Builder):
             pass
 
     def on_print(self):
-        self.on_build_data_set() # in case caller did not do this
+        self.on_build_data_set(False) # in case caller did not do this
         # Create a PDF object
         # this is some work in progress
         pdf = f309(self.pd)
         for d in self.data:
             pdf.add_data(d)
-        pdf.done()
+        pdf.done("309.pdf",False)
 
+    def on_print_blankvoice(self):
+        self.on_build_data_set(True)
+        # Create a PDF object
+        # this is some work in progress
+        pdf = f309(self.pd)
+        for d in self.data:
+            pdf.add_data(d)
+        pdf.done("voice_309.pdf",True)
+#        # Create a PDF object
+#        # this is some work in progress
+ #       pdf = f309(self.pd)
+ #       pdf.done(True)
 
 
     def on_exit(self):
@@ -160,7 +176,7 @@ class f309(FPDF):
         assert(len(s) == 8)
         self.data.append(s)
 
-    def done(self):
+    def done(self,filename:str,print_even_if_blank:bool):
         # resolve any LMI data
         for i in range(len(self.data)):
             if len(self.data[i]) == 8 and self.data[i][6] and self.data[i][7].startswith("DELIVERED: "):
@@ -170,7 +186,13 @@ class f309(FPDF):
                         self.data[j][5] = self.data[i][6]
         np = (len(self.data)+self.ndata_lines-1)//(self.ndata_lines)
         if np <= 0:
+            if print_even_if_blank:
+                self.generate_blank_page(0,0)
+                # Save the PDF
+                self.output(filename)
+                print("FPDF file created!")
             return
+
         for page in range(np):
             self.generate_blank_page(page+1,np)
             self.set_font("Arial",size=8)
@@ -195,7 +217,7 @@ class f309(FPDF):
                 self.clipped_cell(self.vlines[7]-self.vlines[5],10,txt=v[7],align='L')
 
         # Save the PDF
-        self.output("hello_fpdf.pdf")
+        self.output(filename)
         print("FPDF file created!")
 
     @staticmethod
@@ -300,13 +322,15 @@ class f309(FPDF):
         self.cell(self.vhlines[1]-self.vlines[0],10,txt=f"{self.position_tac_call}",align='L')
         self.set_xy(self.vhlines[1]+2,self.hlines[1]+18)
         self.cell(self.vlines[-1]-self.vhlines[2],10,txt=f"{self.opname_user_call}",align='L')
-        # the the footers
+        
+        # then the footers
         self.set_xy(self.vlines[0],self.hlines[6]+18)
         self.cell(self.vlines[1]-self.vlines[0],10,txt=f"{self.opname_user_call}",align='L')
         self.set_xy(self.vlines[5],self.hlines[6]+18)
         self.cell(self.vlines[6]-self.vlines[5],10,txt=f"{date_now}",align='L')
-        self.set_xy(self.vlines[6],self.hlines[6]+18)
-        self.cell(self.vlines[7]-self.vlines[6],10,txt=f"{page} of {npages}",align='C')
+        if npages:
+            self.set_xy(self.vlines[6],self.hlines[6]+18)
+            self.cell(self.vlines[7]-self.vlines[6],10,txt=f"{page} of {npages}",align='C')
 
         # then 8 point stuff
         self.set_font("Arial",style="B",size=8)

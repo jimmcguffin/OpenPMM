@@ -445,7 +445,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>SendOnly</string>
+     <string>Send Only</string>
     </property>
    </widget>
    <widget class="QPushButton" name="cReceiveOnly">
@@ -472,6 +472,19 @@
     </property>
     <property name="text">
      <string>Search</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="c_add_voice_log">
+    <property name="geometry">
+     <rect>
+      <x>1055</x>
+      <y>40</y>
+      <width>195</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Add Voice Log (exp)</string>
     </property>
    </widget>
   </widget>

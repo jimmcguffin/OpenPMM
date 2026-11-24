@@ -480,7 +480,7 @@
    <widget class="QPushButton" name="c_reset_defaults">
     <property name="geometry">
      <rect>
-      <x>315</x>
+      <x>340</x>
       <y>10</y>
       <width>110</width>
       <height>30</height>
@@ -488,6 +488,19 @@
     </property>
     <property name="text">
      <string>Reset Defaults</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="c_print_voice">
+    <property name="geometry">
+     <rect>
+      <x>215</x>
+      <y>10</y>
+      <width>115</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Print Voice 309</string>
     </property>
    </widget>
   </widget>

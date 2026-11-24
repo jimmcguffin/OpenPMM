@@ -47,6 +47,7 @@ from persistentdata import PersistentData
 import pipeline
 import readmessagedialog
 import searchdialog
+import voicedialog
 from serialstream import Level1,LineParser,KissParser
 import sendreceivesettingsdialog
 from sql_mailbox import MailBox, MailBoxHeader, MailFlags, FieldsToSearch
@@ -166,6 +167,7 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         self.cSendReceive.clicked.connect(lambda: self.on_send_receive(True,True))
         self.cSendOnly.clicked.connect(lambda: self.on_send_receive(True,False))
         self.cReceiveOnly.clicked.connect(lambda: self.on_send_receive(False,True))
+        self.c_add_voice_log.clicked.connect(self.on_add_voice_log)
         self.actionImport.triggered.connect(self.on_import_messages)
         self.cInTray.clicked.connect(lambda: self.onSelectFolder(MailFlags.FOLDER_IN_TRAY))
         self.cOutTray.clicked.connect(lambda: self.onSelectFolder(MailFlags.FOLDER_OUT_TRAY))
@@ -1100,4 +1102,22 @@ class MainWindow(QMainWindow,Ui_MainWindowClass):
         else:
             QMessageBox.information(self,"Search","No messages found")
 
+    def on_add_voice_log(self):
+        sd = voicedialog.VoiceDialog(self)
+        sd.c_from_call.setText(self.settings.getActiveCallSign(False).upper())
+
+        if sd.exec() != 1:
+            return
+        try:
+            with open("voice_activity.log","ab") as file:
+                date_sent = sd.c_time.dateTime().toString(Qt.DateFormat.ISODate) # // MailBoxHeader.normalized_date(sd.c_time.text())
+                #fromid = sd.c_message.text().subject.partition("_")[0] # parse off first part of subject
+                ## does it look like an id?
+                #if not re.match(r'^[A-Z0-9]{3}-\d+(R|P)$',fromid):
+                #    fromid = ""
+#                s = f"s,{mbh.date_sent},{mbh.from_addr},{fromid},{mbh.to_addr},{mbh.local_id},{quote_plus(mbh.subject)}\n"
+                s = f"s,{date_sent},{sd.c_from_call.text()},{sd.c_from_message.text()},{sd.c_to_call.text()},{sd.c_to_message.text()},,{sd.c_message.text()}\n"
+                file.write(s.encode("windows-1252","replace"))
+        except FileNotFoundError:
+            pass
 
